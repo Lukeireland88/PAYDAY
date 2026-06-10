@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payday Bank</title>
+  <style>
+    :root, [data-theme="light"] {
+      --bg: #e8d5b5;
+      --bg-pattern: #dcc9a8;
+      --surface: #fff8e7;
+      --surface-alt: #f5e6c8;
+      --text: #2c1810;
+      --text-muted: #6b5344;
+      --primary: #1a6b3c;
+      --primary-hover: #145230;
+      --accent: #c41e3a;
+      --success: #1a6b3c;
+      --warning: #b45309;
+      --danger: #c41e3a;
+      --loan: #c2410c;
+      --savings: #0369a1;
+      --jackpot: #6d28d9;
+      --border: #c4a574;
+      --shadow: 0 4px 12px rgba(44,24,16,0.15);
+      --radius: 10px;
+      --nav-bg: #2c1810;
+      --nav-text: #fff8e7;
+      --card-leader: #fef3c7;
+      --card-danger: #fee2e2;
+      --card-warning: #fffbeb;
+    }
+    [data-theme="dark"] {
+      --bg: #1a1410;
+      --bg-pattern: #241c16;
+      --surface: #2c241c;
+      --surface-alt: #3d3228;
+      --text: #f5e6c8;
+      --text-muted: #a89070;
+      --primary: #4ade80;
+      --primary-hover: #22c55e;
+      --border: #5c4a3a;
+      --shadow: 0 4px 12px rgba(0,0,0,0.4);
+      --nav-bg: #0f0c0a;
+      --card-leader: #3d3520;
+      --card-danger: #3d2020;
+      --card-warning: #3d3020;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--bg);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, var(--bg-pattern) 10px, var(--bg-pattern) 11px);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    #app { max-width: 1280px; margin: 0 auto; padding: 0.75rem; padding-bottom: 5rem; }
+    [hidden] { display: none !important; }
+
+    /* Header */
+    .app-header {
+      text-align: center;
+      padding: 1rem;
+      background: var(--surface);
+      border: 3px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow);
+    }
+    .app-header h1 {
+      font-size: 1.75rem;
+      color: var(--accent);
+      text-shadow: 1px 1px 0 var(--border);
+      letter-spacing: 0.05em;
+    }
+    .app-header .subtitle { color: var(--text-muted); font-size: 0.9rem; }
+    .header-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; align-items: center; margin-top: 0.75rem; }
+    .save-status { font-size: 0.8rem; color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; background: var(--surface-alt); }
+    .save-status.saved { color: var(--success); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+      padding: 0.65rem 1rem; font-size: 0.9rem; font-weight: 600; font-family: inherit;
+      border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer;
+      min-height: 48px; touch-action: manipulation; transition: transform 0.1s, background 0.15s;
+      background: var(--surface-alt); color: var(--text);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary-hover); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: #fff; border-color: #9f1239; }
+    .btn-accent { background: var(--accent); color: #fff; border-color: #9f1239; }
+    .btn-sm { min-height: 40px; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Forms */
+    .form-group { margin-bottom: 0.85rem; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.65rem; font-size: 1rem; font-family: inherit;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); color: var(--text); min-height: 48px;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,60,0.2);
+    }
+    .error-msg { color: var(--danger); font-size: 0.85rem; min-height: 1.2rem; margin-top: 0.25rem; }
+
+    /* Setup */
+    .setup-card {
+      background: var(--surface); border: 3px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem; max-width: 520px; margin: 0 auto; box-shadow: var(--shadow);
+    }
+    .setup-card h2 { margin-bottom: 1rem; color: var(--accent); }
+    .player-setup-row { display: grid; grid-template-columns: 1fr 100px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end; }
+    .player-setup-row label { font-size: 0.8rem; font-weight: 600; }
+
+    /* Summary */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .summary-item {
+      background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+      padding: 0.65rem; text-align: center; box-shadow: var(--shadow);
+    }
+    .summary-item .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+    .summary-item .value { font-size: 1.25rem; font-weight: 800; margin-top: 0.15rem; }
+    .summary-item .value.cash { color: var(--success); }
+    .summary-item .value.loan { color: var(--loan); }
+    .summary-item .value.savings { color: var(--savings); }
+    .summary-item .value.jackpot { color: var(--jackpot); }
+    .summary-item .value.danger { color: var(--danger); }
+
+    /* Jackpot */
+    .jackpot-bar {
+      background: linear-gradient(135deg, #5b21b6, #7c3aed); color: #fff;
+      border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;
+      box-shadow: var(--shadow); border: 2px solid #4c1d95;
+    }
+    .jackpot-bar .amount { font-size: 2rem; font-weight: 800; }
+    .jackpot-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .btn-lottery {
+      background: #fbbf24; color: #78350f; border: none; font-weight: 700;
+    }
+    .btn-lottery:hover { background: #f59e0b; }
+    .btn-jackpot-six {
+      background: #22c55e; color: #fff; border: none; font-weight: 700;
+    }
+    .btn-jackpot-six:hover { background: #16a34a; }
+    .lottery-entrant {
+      display: flex; gap: 0.5rem; align-items: center;
+      padding: 0.35rem 0; border-bottom: 1px solid var(--border);
+    }
+    .lottery-player-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;
+    }
+    .lottery-player-row:last-child { border-bottom: none; }
+    .lottery-player-row.ok { color: var(--success); }
+    .lottery-player-row.short { color: var(--danger); }
+    .lottery-prize { font-size: 1.5rem; font-weight: 800; color: var(--jackpot); text-align: center; margin: 0.75rem 0; }
+
+    /* Player cards */
+    .player-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+    @media (min-width: 600px) { .player-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 960px) { .player-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .player-card {
+      background: var(--surface); border: 3px solid var(--border); border-radius: var(--radius);
+      padding: 1rem; box-shadow: var(--shadow); position: relative;
+    }
+    .player-card.is-leader { border-color: #ca8a04; background: var(--card-leader); }
+    .player-card.has-bills { border-left: 5px solid var(--warning); }
+    .player-card.negative { border-color: var(--danger); background: var(--card-danger); }
+    .player-card.has-loan { border-right: 5px solid var(--loan); }
+    .leader-badge {
+      position: absolute; top: -8px; right: 8px; background: #ca8a04; color: #fff;
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .player-card.is-tied { border-color: #ca8a04; background: var(--card-leader); }
+    .tied-badge {
+      position: absolute; top: -8px; right: 8px; background: #b45309; color: #fff;
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    }
+    .player-name { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .balance-row { display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.95rem; }
+    .balance-row .amt { font-weight: 700; }
+    .balance-row.cash .amt { color: var(--success); font-size: 1.5rem; }
+    .balance-row.loan .amt { color: var(--loan); }
+    .balance-row.savings .amt { color: var(--savings); }
+    .balance-row.bills .amt { color: var(--warning); }
+    .player-meta { font-size: 0.8rem; color: var(--text-muted); margin: 0.5rem 0; }
+    .player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.75rem; }
+    .player-actions .btn { font-size: 0.75rem; min-height: 44px; padding: 0.4rem; }
+    .player-actions .btn-payday { grid-column: 1 / -1; background: var(--accent); color: #fff; border-color: #9f1239; font-size: 0.9rem; }
+
+    /* Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg);
+      display: flex; justify-content: space-around; padding: 0.35rem; z-index: 50;
+      border-top: 3px solid var(--border);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 0.4rem; background: none; border: none; color: var(--nav-text);
+      font-size: 0.65rem; cursor: pointer; opacity: 0.7; min-height: 48px; font-family: inherit;
+    }
+    .nav-btn.active { opacity: 1; color: #fbbf24; }
+    .nav-btn .icon { font-size: 1.25rem; }
+
+    /* Panels */
+    .panel { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+    .panel h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--accent); }
+
+    /* History */
+    .history-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .history-filters input, .history-filters select { flex: 1; min-width: 120px; padding: 0.5rem; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+    .history-list { max-height: 400px; overflow-y: auto; }
+    .history-item {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 0.5rem 0.75rem;
+      padding: 0.65rem; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-type { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: var(--surface-alt); }
+    .history-amt { font-weight: 700; text-align: right; white-space: nowrap; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+    .stat-card { background: var(--surface-alt); border-radius: var(--radius); padding: 0.75rem; border: 1px solid var(--border); }
+    .stat-card h3 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .stat-card .val { font-size: 1.1rem; font-weight: 700; }
+
+    /* Banker */
+    .banker-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+    .banker-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .banker-table th, .banker-table td { padding: 0.5rem; border: 1px solid var(--border); text-align: left; }
+    .banker-table th { background: var(--surface-alt); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.confirm-overlay {
+      z-index: 250;
+      background: rgba(0,0,0,0.65);
+    }
+    .confirm-modal { max-width: 400px; text-align: center; }
+    .confirm-modal h3 { color: var(--accent); }
+    .confirm-message {
+      font-size: 1rem; line-height: 1.6; margin: 0.75rem 0 1rem;
+      color: var(--text);
+    }
+    .confirm-detail {
+      background: var(--surface-alt); border-radius: var(--radius);
+      padding: 0.75rem; margin-bottom: 1rem; text-align: left; font-size: 0.9rem;
+    }
+    @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 1rem; } }
+    .modal {
+      background: var(--surface); width: 100%; max-width: 480px; max-height: 92vh;
+      overflow-y: auto; padding: 1.25rem; border-radius: var(--radius) var(--radius) 0 0;
+      border: 3px solid var(--border); box-shadow: var(--shadow);
+    }
+    @media (min-width: 600px) { .modal { border-radius: var(--radius); } }
+    .modal h3 { margin-bottom: 0.75rem; color: var(--accent); }
+    .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .modal-actions .btn { flex: 1; }
+    .note-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+    .note-chip { padding: 0.3rem 0.6rem; font-size: 0.75rem; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; background: var(--surface-alt); }
+    .note-chip:hover, .note-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .bill-list { margin: 0.5rem 0; max-height: 200px; overflow-y: auto; }
+    .bill-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.35rem; font-size: 0.85rem; }
+    .payday-summary { background: var(--surface-alt); border-radius: var(--radius); padding: 0.75rem; margin: 0.75rem 0; }
+    .payday-line { display: flex; justify-content: space-between; padding: 0.25rem 0; font-size: 0.9rem; }
+    .payday-line.total { font-weight: 800; border-top: 2px solid var(--border); margin-top: 0.5rem; padding-top: 0.5rem; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--surface-alt); border-radius: var(--radius); margin: 0.5rem 0; }
+
+    /* Leaderboard / Winner */
+    .leaderboard-list { list-style: none; }
+    .leaderboard-list li { display: flex; justify-content: space-between; padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 1rem; }
+    .leaderboard-list li:first-child { font-weight: 800; color: #ca8a04; font-size: 1.15rem; }
+    .winner-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300;
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .winner-card { background: var(--surface); border: 4px solid #ca8a04; border-radius: var(--radius); padding: 2rem; text-align: center; max-width: 400px; }
+    .winner-card h2 { font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem; }
+    #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 299; }
+
+    /* Toolbar */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    @media print {
+      .bottom-nav, .toolbar, .player-actions, .modal-overlay, .winner-overlay { display: none !important; }
+      body { background: #fff; }
+    }
+    @media (prefers-reduced-motion: reduce) { .btn, .note-chip { transition: none; } }
+  </style>
+</head>
+<body>
+  <div id="app" class="sans">
+    <header class="app-header">
+      <h1>PAYDAY BANK</h1>
+      <p class="subtitle">Digital banker for your board game</p>
+      <div class="header-row">
+        <span id="save-status" class="save-status">Ready</span>
+        <span class="save-status">Modern Payday</span>
+        <button type="button" id="btn-theme" class="btn btn-sm" title="Toggle theme">🌓 Theme</button>
+        <button type="button" id="btn-sound" class="btn btn-sm" title="Toggle sounds">🔇 Sound</button>
+      </div>
+    </header>
+
+    <!-- SETUP -->
+    <section id="view-setup">
+      <div class="setup-card">
+        <h2>New Game Setup</h2>
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Modern Payday — 10% loan interest, $1,000 loan repayments.</p>
+        <div class="form-group">
+          <label for="setup-count">Players (2–6)</label>
+          <select id="setup-count"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option></select>
+        </div>
+        <div class="form-group">
+          <label>Players &amp; Salaries</label>
+          <div id="setup-players"></div>
+        </div>
+        <div class="form-group">
+          <label for="setup-starting">Starting Cash (each player)</label>
+          <input type="number" id="setup-starting" value="3500" min="0" step="50">
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="setup-enforce-increments" checked> Enforce official repayment increments</label>
+        </div>
+        <p id="setup-error" class="error-msg"></p>
+        <button type="button" id="btn-start" class="btn btn-primary btn-block">Start Game</button>
+        <button type="button" id="btn-import" class="btn btn-block" style="margin-top:0.5rem">Import Saved Game (JSON)</button>
+        <input type="file" id="import-file" accept=".json" hidden>
+      </div>
+    </section>
+
+    <!-- GAME VIEWS (hidden until started) -->
+    <div id="view-game" hidden>
+      <div id="tab-game">
+        <div class="summary-grid" id="summary-grid"></div>
+        <div class="jackpot-bar">
+          <div><div style="font-size:0.8rem;opacity:0.9">JACKPOT</div><div class="amount" id="jackpot-amount">$0</div></div>
+          <div class="jackpot-actions">
+            <button type="button" class="btn btn-sm" data-action="jackpot-contrib-player">Player Contribute</button>
+            <button type="button" class="btn btn-sm btn-jackpot-six" data-action="jackpot-six">Rolled a 6!</button>
+            <button type="button" class="btn btn-sm btn-lottery" data-action="lottery">Run Lottery</button>
+            <button type="button" class="btn btn-sm" data-action="jackpot-edit">Edit Jackpot</button>
+          </div>
+        </div>
+        <div class="player-grid" id="player-grid"></div>
+      </div>
+
+      <div id="tab-banker" hidden>
+        <div class="panel">
+          <h2>Banker Dashboard</h2>
+          <div class="banker-quick" id="banker-quick"></div>
+          <table class="banker-table" id="banker-table"></table>
+        </div>
+      </div>
+
+      <div id="tab-history" hidden>
+        <div class="panel">
+          <h2>Transaction History</h2>
+          <div class="history-filters">
+            <input type="search" id="history-search" placeholder="Search notes...">
+            <select id="history-filter-player"><option value="">All Players</option></select>
+            <select id="history-filter-type"><option value="">All Types</option></select>
+          </div>
+          <div class="toolbar">
+            <button type="button" id="btn-undo" class="btn btn-sm">Undo Last</button>
+            <button type="button" id="btn-undo-multi" class="btn btn-sm">Undo Multiple</button>
+            <button type="button" id="btn-clear-history" class="btn btn-sm btn-danger">Clear History</button>
+            <button type="button" id="btn-export-txn" class="btn btn-sm">Export CSV</button>
+            <button type="button" id="btn-export-balances" class="btn btn-sm">Export Balances</button>
+            <button type="button" id="btn-print" class="btn btn-sm">Print Summary</button>
+            <button type="button" id="btn-export-json" class="btn btn-sm">Backup JSON</button>
+          </div>
+          <div class="history-list" id="history-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-stats" hidden>
+        <div class="panel"><h2>Statistics</h2><div class="stats-grid" id="stats-grid"></div></div>
+      </div>
+
+      <div id="tab-leaderboard" hidden>
+        <div class="panel">
+          <h2>Leaderboard</h2>
+          <ul class="leaderboard-list" id="leaderboard-list"></ul>
+          <button type="button" id="btn-winner" class="btn btn-accent btn-block" style="margin-top:1rem">End Game — Show Winner</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="btn-new-game" class="btn btn-sm">New Game</button>
+        <button type="button" id="btn-reset" class="btn btn-sm btn-danger">Reset Game</button>
+        <button type="button" id="btn-clear-save" class="btn btn-sm">Clear Saved Data</button>
+      </div>
+
+      <nav class="bottom-nav" id="bottom-nav">
+        <button type="button" class="nav-btn active" data-tab="game"><span class="icon">🎮</span>Game</button>
+        <button type="button" class="nav-btn" data-tab="banker"><span class="icon">🏦</span>Banker</button>
+        <button type="button" class="nav-btn" data-tab="history"><span class="icon">📜</span>History</button>
+        <button type="button" class="nav-btn" data-tab="stats"><span class="icon">📊</span>Stats</button>
+        <button type="button" class="nav-btn" data-tab="leaderboard"><span class="icon">🏆</span>Leaders</button>
+      </nav>
+    </div>
+
+    <div id="modal-root"></div>
+    <canvas id="confetti-canvas" hidden></canvas>
+  </div>
+
+  <script>
+/* PAYDAY BANK - Application Logic */
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'payday-bank-v2';
+  const LOTTERY_BANK_AMOUNT = 1000;
+  const LOTTERY_PLAYER_AMOUNT = 100;
+  const NOTE_PRESETS = ['Salary','Bill','Mail','Deal Card','Lottery','Yard Sale','Insurance','Radio Contest','Stock Purchase','Jackpot','Other'];
+  const TXN_LABELS = {
+    bank_payment:'Bank Payment', bank_deposit:'Bank Deposit', player_transfer:'Player Transfer',
+    loan_taken:'Loan Taken', loan_repaid:'Loan Repaid', loan_interest:'Loan Interest',
+    savings_deposit:'Savings Deposit', savings_withdrawal:'Savings Withdrawal', savings_interest:'Savings Interest',
+    payday_salary:'Payday Salary', bill_added:'Bill Added', bill_paid:'Bill Paid',
+    jackpot_contribution:'Jackpot Contribution', jackpot_payout:'Jackpot Payout', jackpot_six:'Jackpot (Rolled 6)',
+    lottery_draw:'Lottery Draw', manual_adjustment:'Manual Adjustment'
+  };
+
+  let state = defaultState();
+  let activeModal = null;
+  let soundsOn = false;
+  let saveFlashTimer = null;
+
+  function defaultState() {
+    return {
+      gameStarted: false,
+      enforceIncrements: true,
+      startingBalance: 3500,
+      jackpot: 0,
+      players: [],
+      transactions: [],
+      theme: 'light',
+      peakBalances: {}
+    };
+  }
+
+  function defaultPlayer(name, salary, cash) {
+    return { id: uid(), name, cash, loan: 0, savings: 0, salary, paydayCount: 0, bills: [] };
+  }
+
+  function uid() {
+    return crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function $(sel) { return document.querySelector(sel); }
+  function $$(sel) { return document.querySelectorAll(sel); }
+
+  function money(n) {
+    n = Number(n) || 0;
+    return (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString();
+  }
+
+  function parseAmt(v) {
+    const n = parseFloat(v);
+    return isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+  }
+
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function editionRules() {
+    return { loanRate: 0.10, repayInc: 1000 };
+  }
+
+  function getPlayer(id) { return state.players.find(p => p.id === id); }
+  function playerName(id) {
+    if (id === 'bank') return 'Bank';
+    if (id === 'jackpot') return 'Jackpot';
+    const p = getPlayer(id);
+    return p ? p.name : '?';
+  }
+
+  function billsTotal(p) { return p.bills.reduce((s, b) => s + b.amount, 0); }
+  function netWorth(p) { return p.cash - p.loan - billsTotal(p); }
+
+  function flashSave() {
+    const el = $('#save-status');
+    el.textContent = 'Saved';
+    el.classList.add('saved');
+    clearTimeout(saveFlashTimer);
+    saveFlashTimer = setTimeout(() => { el.textContent = 'Ready'; el.classList.remove('saved'); }, 1500);
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      flashSave();
+    } catch (e) { console.warn(e); }
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw);
+      if (d && typeof d === 'object') {
+        state = { ...defaultState(), ...d };
+        state.players = (d.players || []).map(p => ({ ...defaultPlayer('', 0, 0), ...p, bills: p.bills || [] }));
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  function playSound(type) {
+    if (!soundsOn) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = type === 'win' ? 880 : type === 'pay' ? 440 : 330;
+      g.gain.value = 0.08;
+      o.start(); o.stop(ctx.currentTime + 0.12);
+    } catch (_) {}
+  }
+
+  function captureSnapshot(ids) {
+    const snap = { jackpot: state.jackpot, players: {} };
+    ids.forEach(id => {
+      const p = getPlayer(id);
+      if (p) snap.players[id] = { cash: p.cash, loan: p.loan, savings: p.savings, bills: JSON.parse(JSON.stringify(p.bills)), paydayCount: p.paydayCount, salary: p.salary };
+    });
+    return snap;
+  }
+
+  function restoreSnapshot(snap) {
+    if (!snap) return;
+    state.jackpot = snap.jackpot;
+    Object.entries(snap.players || {}).forEach(([id, d]) => {
+      const p = getPlayer(id);
+      if (p) Object.assign(p, d);
+    });
+  }
+
+  function trackPeak(p) {
+    const nw = p.cash - p.loan;
+    if (!state.peakBalances[p.id] || nw > state.peakBalances[p.id]) state.peakBalances[p.id] = nw;
+  }
+
+  function logTxn(type, amount, from, to, note, snap) {
+    state.transactions.push({ id: uid(), timestamp: Date.now(), type, amount, from, to, note: note || '', undoSnapshot: snap });
+  }
+
+  function loanIncrement() {
+    return editionRules().repayInc; // $1,000
+  }
+
+  /** Round shortfall up to the nearest official loan increment. */
+  function calcAutoLoanAmount(shortfall) {
+    if (shortfall <= 0) return 0;
+    const inc = loanIncrement();
+    return Math.ceil(shortfall / inc) * inc;
+  }
+
+  function validateLoanTakeAmount(amount) {
+    const inc = loanIncrement();
+    if (amount < inc) return `Loans must be at least ${money(inc)}.`;
+    if (amount % inc !== 0) return `Loans must be taken in ${money(inc)} increments.`;
+    return null;
+  }
+
+  function validateLoanBalance(remainingLoan) {
+    if (remainingLoan <= 0) return null;
+    const inc = loanIncrement();
+    if (remainingLoan < inc) {
+      return `Loan balance cannot be less than ${money(inc)}. Repay in full or leave at least ${money(inc)}.`;
+    }
+    if (remainingLoan % inc !== 0) {
+      return `Loan balance must be in ${money(inc)} increments.`;
+    }
+    return null;
+  }
+
+  function validateRepayIncrement(amount) {
+    if (!state.enforceIncrements) return null;
+    const inc = editionRules().repayInc;
+    if (amount % inc !== 0) return `Repayments must be in ${money(inc)} increments.`;
+    return null;
+  }
+
+  /** Apply an auto-loan rounded up to official increments (e.g. $200 shortfall → $1,000 loan). */
+  function applyAutoLoan(player, shortfall) {
+    const loanAmount = calcAutoLoanAmount(shortfall);
+    const loanErr = validateLoanTakeAmount(loanAmount);
+    if (loanErr) return { ok: false, err: loanErr };
+    player.cash += loanAmount;
+    player.loan += loanAmount;
+    return { ok: true, loanAmount };
+  }
+
+  /* ---- Core mutations (no logging) ---- */
+  function mutateBankPayment(playerId, amount) { getPlayer(playerId).cash += amount; }
+  function mutateBankDeposit(playerId, amount) { getPlayer(playerId).cash -= amount; }
+  function mutateTransfer(fromId, toId, amount, allowLoan) {
+    const payer = getPlayer(fromId);
+    const recip = getPlayer(toId);
+    const short = amount - payer.cash;
+    if (short > 0) {
+      if (!allowLoan) return { ok: false, err: `Insufficient cash (short ${money(short)})` };
+      const lr = applyAutoLoan(payer, short);
+      if (!lr.ok) return lr;
+    }
+    if (payer.cash < amount) return { ok: false, err: 'Insufficient cash' };
+    payer.cash -= amount; recip.cash += amount;
+    return { ok: true };
+  }
+  function mutateLoan(playerId, amount) {
+    const loanErr = validateLoanTakeAmount(amount);
+    if (loanErr) return { ok: false, err: loanErr };
+    const p = getPlayer(playerId);
+    p.cash += amount;
+    p.loan += amount;
+    return { ok: true };
+  }
+  function mutateRepay(playerId, amount) {
+    const p = getPlayer(playerId);
+    if (amount > p.loan) return { ok: false, err: 'Exceeds loan balance' };
+    if (amount > p.cash) return { ok: false, err: 'Insufficient cash' };
+    const incErr = validateRepayIncrement(amount);
+    if (incErr) return { ok: false, err: incErr };
+    const remaining = p.loan - amount;
+    const balErr = validateLoanBalance(remaining);
+    if (balErr) return { ok: false, err: balErr };
+    p.cash -= amount;
+    p.loan -= amount;
+    return { ok: true };
+  }
+  function mutateJackpotContrib(fromId, amount) {
+    const p = getPlayer(fromId);
+    if (p.cash < amount) return { ok: false, err: 'Insufficient cash' };
+    p.cash -= amount;
+    state.jackpot += amount;
+    return { ok: true };
+  }
+  function mutateJackpotPayout(toId, amount) {
+    if (amount > state.jackpot) return { ok: false, err: 'Exceeds jackpot' };
+    state.jackpot -= amount;
+    getPlayer(toId).cash += amount;
+    return { ok: true };
+  }
+
+  function doTxn(type, amount, from, to, note, mutateFn) {
+    const ids = [];
+    if (from && from !== 'bank' && from !== 'jackpot') ids.push(from);
+    if (to && to !== 'bank' && to !== 'jackpot') ids.push(to);
+    const unique = [...new Set(ids)];
+    const snap = captureSnapshot(unique.length ? unique : state.players.map(p => p.id));
+    snap.jackpot = state.jackpot;
+    const result = mutateFn();
+    if (result && result.ok === false) return result;
+    logTxn(type, amount, from, to, note, snap);
+    state.players.forEach(trackPeak);
+    save(); render(); playSound('pay');
+    return { ok: true, ...result };
+  }
+
+  function undo(n) {
+    n = n || 1;
+    for (let i = 0; i < n && state.transactions.length; i++) {
+      const t = state.transactions.pop();
+      restoreSnapshot(t.undoSnapshot);
+    }
+    save(); render();
+  }
+
+  /* ---- Payday ---- */
+  function calcLoanInterest(p) {
+    if (p.loan <= 0) return 0;
+    return Math.round(p.loan * editionRules().loanRate);
+  }
+
+  function paydayCashAfterInterest(p) {
+    return p.cash + p.salary - calcLoanInterest(p);
+  }
+
+  /** Valid loan repay amounts on Pay Day (after interest), per official $1,000 rules. */
+  function getPaydayLoanRepayOptions(p) {
+    const afterInt = paydayCashAfterInterest(p);
+    const inc = loanIncrement();
+    const amounts = [0];
+    for (let repay = inc; repay <= Math.min(p.loan, afterInt); repay += inc) {
+      if (validateLoanBalance(p.loan - repay) === null) amounts.push(repay);
+    }
+    if (p.loan > 0 && p.loan <= afterInt && validateLoanBalance(0) === null && !amounts.includes(p.loan)) {
+      amounts.push(p.loan);
+    }
+    return amounts;
+  }
+
+  function processPayday(playerId, loanRepayAmount, autoLoan) {
+    const p = getPlayer(playerId);
+    const snap = captureSnapshot([playerId]);
+    const salary = p.salary;
+    const loanInt = calcLoanInterest(p);
+    const billsDue = billsTotal(p);
+
+    p.cash += salary;
+    if (loanInt > 0) p.cash -= loanInt;
+
+    if (loanRepayAmount > 0) {
+      const rr = mutateRepay(playerId, loanRepayAmount);
+      if (!rr.ok) { restoreSnapshot(snap); return rr; }
+    }
+
+    if (p.cash < billsDue) {
+      if (!autoLoan) {
+        restoreSnapshot(snap);
+        return { ok: false, err: `Insufficient cash for all bills (${money(billsDue)} due). Enable auto-loan.` };
+      }
+      const lr = applyAutoLoan(p, billsDue - p.cash);
+      if (!lr.ok) { restoreSnapshot(snap); return lr; }
+    }
+
+    p.cash -= billsDue;
+    p.bills = [];
+    p.paydayCount += 1;
+
+    const repayNote = loanRepayAmount > 0 ? `, Loan repaid -${money(loanRepayAmount)}` : '';
+    const note = `Salary +${money(salary)}, Interest -${money(loanInt)}${repayNote}, Bills -${money(billsDue)}`;
+    logTxn('payday_salary', salary, 'bank', playerId, note, snap);
+    trackPeak(p);
+    save();
+    render();
+    playSound('win');
+    return { ok: true };
+  }
+
+  /* ---- Modals ---- */
+  function closeAllModals() {
+    $('#modal-root').innerHTML = '';
+    activeModal = null;
+  }
+
+  function closeModal() {
+    const root = $('#modal-root');
+    if (root.lastElementChild) root.lastElementChild.remove();
+    if (!root.children.length) activeModal = null;
+  }
+
+  function openConfirmModal({ title, message, detailHtml, confirmText, cancelText, danger, onConfirm, onCancel }) {
+    const ov = document.createElement('div');
+    ov.className = 'modal-overlay confirm-overlay';
+    ov.onclick = e => {
+      if (e.target === ov) { ov.remove(); onCancel?.(); }
+    };
+    const m = document.createElement('div');
+    m.className = 'modal confirm-modal';
+    m.setAttribute('role', 'alertdialog');
+    m.setAttribute('aria-modal', 'true');
+    m.innerHTML = `
+      <h3>${title}</h3>
+      ${message ? `<p class="confirm-message">${message}</p>` : ''}
+      ${detailHtml ? `<div class="confirm-detail">${detailHtml}</div>` : ''}
+      <div class="modal-actions">
+        <button type="button" class="btn" data-cancel>${cancelText || 'Cancel'}</button>
+        <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-ok>${confirmText || 'Confirm'}</button>
+      </div>`;
+    m.querySelector('[data-cancel]').onclick = () => { ov.remove(); onCancel?.(); };
+    m.querySelector('[data-ok]').onclick = () => { ov.remove(); onConfirm?.(); };
+    ov.appendChild(m);
+    $('#modal-root').appendChild(ov);
+    m.querySelector('[data-ok]').focus();
+  }
+
+  function openModal(html, onMount) {
+    closeAllModals();
+    const ov = document.createElement('div');
+    ov.className = 'modal-overlay';
+    ov.onclick = e => { if (e.target === ov) closeModal(); };
+    const m = document.createElement('div');
+    m.className = 'modal';
+    m.innerHTML = html;
+    ov.appendChild(m);
+    $('#modal-root').appendChild(ov);
+    if (onMount) onMount(m);
+    const inp = m.querySelector('input,select,textarea');
+    if (inp) inp.focus();
+  }
+
+  function noteField(id) {
+    const chips = NOTE_PRESETS.map(n => `<button type="button" class="note-chip" data-n="${esc(n)}">${esc(n)}</button>`).join('');
+    return `<div class="form-group"><label for="${id}">Note</label><input id="${id}" maxlength="120" placeholder="Optional note"><div class="note-chips">${chips}</div></div>`;
+  }
+
+  function wireNotes(m, id) {
+    const inp = m.querySelector('#' + id);
+    m.querySelectorAll('.note-chip').forEach(c => c.onclick = () => { inp.value = c.dataset.n; m.querySelectorAll('.note-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); });
+  }
+
+  function modalErr(m, msg) { const e = m.querySelector('.error-msg'); if (e) e.textContent = msg; }
+
+  function playerOptions(exclude) {
+    return state.players.filter(p => p.id !== exclude).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  }
+
+  function allPlayerOptions() {
+    return state.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  }
+
+  function openAmountModal(title, fields, onConfirm) {
+    openModal(`<h3>${title}</h3>${fields}<p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Confirm</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => { const r = onConfirm(m); if (r && r.err) modalErr(m, r.err); else if (r !== false) closeModal(); };
+      wireNotes(m, 'note');
+    });
+  }
+
+  function actionReceive(playerId) {
+    const p = getPlayer(playerId);
+    openAmountModal(`Receive Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1" step="1"></div>${noteField('note')}`, m => {
+      const a = parseAmt(m.querySelector('#amt').value);
+      if (!a) return { err: 'Enter valid amount' };
+      return doTxn('bank_payment', a, 'bank', playerId, m.querySelector('#note').value.trim(), () => { mutateBankPayment(playerId, a); return { ok: true }; });
+    });
+  }
+
+  function actionPay(playerId) {
+    const p = getPlayer(playerId);
+    openAmountModal(`Pay Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}`, m => {
+      const a = parseAmt(m.querySelector('#amt').value);
+      if (!a) return { err: 'Enter valid amount' };
+      if (p.cash < a) return { err: 'Insufficient cash' };
+      return doTxn('bank_deposit', a, playerId, 'bank', m.querySelector('#note').value.trim(), () => { mutateBankDeposit(playerId, a); return { ok: true }; });
+    });
+  }
+
+  function actionTransfer(playerId) {
+    const p = getPlayer(playerId);
+    openModal(`<h3>Transfer — ${esc(p.name)}</h3><p>Cash: ${money(p.cash)}</p>
+      <div class="form-group"><label>To</label><select id="to">${playerOptions(playerId)}</select></div>
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}
+      <div class="checkbox-row" id="loan-row" hidden><input type="checkbox" id="useloan"><label for="useloan">Take loan for shortfall</label></div>
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Transfer</button></div>`, m => {
+      const amtIn = m.querySelector('#amt');
+      const loanRow = m.querySelector('#loan-row');
+      amtIn.oninput = () => {
+        const a = parseAmt(amtIn.value);
+        const sh = a ? a - p.cash : 0;
+        loanRow.hidden = sh <= 0;
+        if (sh > 0) {
+          const loanAmt = calcAutoLoanAmount(sh);
+          m.querySelector('label[for="useloan"]').textContent =
+            loanAmt > sh
+              ? `Take loan for ${money(loanAmt)} (${money(sh)} shortfall, min ${money(loanIncrement())} loan)`
+              : `Take loan for shortfall (${money(sh)})`;
+        }
+      };
+      m.querySelector('[data-x]').onclick = closeModal;
+      wireNotes(m, 'note');
+      m.querySelector('[data-ok]').onclick = () => {
+        const a = parseAmt(amtIn.value);
+        const to = m.querySelector('#to').value;
+        const note = m.querySelector('#note').value.trim();
+        const sh = a ? a - p.cash : 0;
+        const useLoan = sh > 0 && m.querySelector('#useloan').checked;
+        if (!a) { modalErr(m, 'Enter valid amount'); return; }
+        if (sh > 0 && !useLoan) { modalErr(m, `Insufficient cash. Shortfall: ${money(sh)}`); return; }
+        openConfirmModal({
+          title: 'Confirm Transfer',
+          message: `Transfer <strong>${money(a)}</strong> from <strong>${esc(p.name)}</strong> to <strong>${esc(playerName(to))}</strong>?`,
+          confirmText: 'Transfer',
+          onConfirm: () => {
+            const r = doTxn('player_transfer', a, playerId, to, note, () => mutateTransfer(playerId, to, a, useLoan));
+            if (r.ok === false) modalErr(m, r.err);
+            else closeAllModals();
+          }
+        });
+      };
+    });
+  }
+
+  function actionLoan(playerId) {
+    const p = getPlayer(playerId);
+    const inc = loanIncrement();
+    openAmountModal(`Take Loan — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)} · Loan: ${money(p.loan)}</p>
+      <p style="font-size:0.85rem;color:var(--text-muted)">Loans must be in ${money(inc)} increments (minimum ${money(inc)}).</p>
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="${inc}" step="${inc}"></div>${noteField('note')}`, m => {
+      const a = parseAmt(m.querySelector('#amt').value);
+      if (!a) return { err: 'Enter valid amount' };
+      return doTxn('loan_taken', a, playerId, 'bank', m.querySelector('#note').value.trim(), () => mutateLoan(playerId, a));
+    });
+  }
+
+  function actionAddBill(playerId) {
+    openModal(`<h3>Add Bill — ${esc(playerName(playerId))}</h3>
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>
+      <div class="form-group"><label>Description</label><input id="desc" maxlength="80" placeholder="e.g. Food Bill"></div>
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Add</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => {
+        const a = parseAmt(m.querySelector('#amt').value);
+        const desc = m.querySelector('#desc').value.trim() || 'Bill';
+        if (!a) { modalErr(m, 'Enter valid amount'); return; }
+        const p = getPlayer(playerId);
+        const snap = captureSnapshot([playerId]);
+        p.bills.push({ id: uid(), amount: a, description: desc });
+        logTxn('bill_added', a, playerId, 'bank', desc, snap);
+        save(); render(); closeModal();
+      };
+    });
+  }
+
+  function actionPayday(playerId) {
+    const p = getPlayer(playerId);
+    const loanInt = calcLoanInterest(p);
+    const billsDue = billsTotal(p);
+    const repayOptions = getPaydayLoanRepayOptions(p);
+    const repaySelect = repayOptions.map(a =>
+      `<option value="${a}">${a === 0 ? 'No loan repayment' : money(a)}</option>`
+    ).join('');
+    const billsHtml = p.bills.length
+      ? p.bills.map(b => `<div class="bill-item"><span>${esc(b.description)}</span><span>${money(b.amount)}</span></div>`).join('')
+      : '<p>No outstanding bills.</p>';
+
+    openModal(`<h3>Payday — ${esc(p.name)}</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted)">Official order: salary → interest → loan repayment → all bills.</p>
+      <div class="payday-summary" id="payday-estimate">
+        <div class="payday-line"><span>1. Salary</span><span style="color:var(--success)">+${money(p.salary)}</span></div>
+        <div class="payday-line"><span>2. Loan interest (10%)</span><span style="color:var(--danger)">-${money(loanInt)}</span></div>
+        <div class="payday-line"><span>4. All bills (required)</span><span style="color:var(--warning)">-${money(billsDue)}</span></div>
+        <div class="payday-line total"><span>Estimated cash after</span><span id="payday-est-val">—</span></div>
+      </div>
+      ${p.loan > 0 ? `<div class="form-group"><label>3. Repay loan (Pay Day only, ${money(loanIncrement())} increments)</label>
+        <select id="loan-repay">${repaySelect}</select>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.35rem">Current loan: ${money(p.loan)}</p></div>` : ''}
+      <p><strong>Outstanding Bills — all must be paid</strong></p>
+      <div class="bill-list">${billsHtml}</div>
+      <div class="checkbox-row"><input type="checkbox" id="autoloan" checked><label for="autoloan">Auto-loan if insufficient cash (rounded up to ${money(loanIncrement())} increments)</label></div>
+      <p class="error-msg"></p>
+      <div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Process Payday</button></div>`, m => {
+      function updateEstimate() {
+        const repay = parseInt(m.querySelector('#loan-repay')?.value || '0', 10) || 0;
+        const est = paydayCashAfterInterest(p) - repay - billsDue;
+        const el = m.querySelector('#payday-est-val');
+        if (el) el.textContent = money(est);
+      }
+      updateEstimate();
+      m.querySelector('#loan-repay')?.addEventListener('change', updateEstimate);
+      m.querySelector('[data-x]').onclick = closeAllModals;
+      m.querySelector('[data-ok]').onclick = () => {
+        const loanRepay = parseInt(m.querySelector('#loan-repay')?.value || '0', 10) || 0;
+        const auto = m.querySelector('#autoloan').checked;
+        const estCash = paydayCashAfterInterest(p) - loanRepay - billsDue;
+        const detailHtml = `
+          <div class="payday-line"><span>Salary</span><span style="color:var(--success)">+${money(p.salary)}</span></div>
+          <div class="payday-line"><span>Loan interest</span><span style="color:var(--danger)">-${money(loanInt)}</span></div>
+          ${loanRepay > 0 ? `<div class="payday-line"><span>Loan repayment</span><span style="color:var(--danger)">-${money(loanRepay)}</span></div>` : ''}
+          <div class="payday-line"><span>All bills</span><span style="color:var(--warning)">-${money(billsDue)}</span></div>
+          <div class="payday-line total"><span>Cash after Payday</span><span>${money(estCash)}</span></div>
+          ${estCash < 0 && auto ? `<p style="margin-top:0.5rem;font-size:0.85rem;color:var(--warning)">Auto-loan of ${money(calcAutoLoanAmount(-estCash))} will be taken.</p>` : ''}`;
+        openConfirmModal({
+          title: 'Confirm Payday',
+          message: `Process Payday for <strong>${esc(p.name)}</strong>?`,
+          detailHtml,
+          confirmText: 'Yes, Process Payday',
+          onConfirm: () => {
+            const r = processPayday(playerId, loanRepay, auto);
+            if (!r.ok) modalErr(m, r.err);
+            else closeAllModals();
+          }
+        });
+      };
+    });
+  }
+
+  function actionEdit(playerId) {
+    const p = getPlayer(playerId);
+    openModal(`<h3>Edit — ${esc(p.name)}</h3>
+      <div class="form-group"><label>Name</label><input id="pname" value="${esc(p.name)}" maxlength="30"></div>
+      <div class="form-group"><label>Cash</label><input type="number" id="cash" value="${p.cash}"></div>
+      <div class="form-group"><label>Loan</label><input type="number" id="loan" value="${p.loan}" min="0"></div>
+      <div class="form-group"><label>Salary</label><input type="number" id="salary" value="${p.salary}" min="0"></div>
+      <div class="form-group"><label>Reason</label><input id="reason" placeholder="Required note"></div>
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Save</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => {
+        const reason = m.querySelector('#reason').value.trim();
+        const newName = m.querySelector('#pname').value.trim();
+        if (!reason || !newName) { modalErr(m, 'Name and note required'); return; }
+        const cash = parseFloat(m.querySelector('#cash').value);
+        const loan = parseFloat(m.querySelector('#loan').value);
+        const salary = parseFloat(m.querySelector('#salary').value);
+        if ([cash, loan, salary].some(v => !isFinite(v) || v < 0)) { modalErr(m, 'Invalid values'); return; }
+        const loanBalErr = validateLoanBalance(loan);
+        if (loanBalErr) { modalErr(m, loanBalErr); return; }
+        const snap = captureSnapshot([playerId]);
+        p.name = newName; p.cash = cash; p.loan = loan; p.salary = salary;
+        logTxn('manual_adjustment', 0, playerId, playerId, reason, snap);
+        save(); render(); closeModal();
+      };
+    });
+  }
+
+  function actionJackpotContrib(fromPlayer) {
+    openModal(`<h3>Contribute to Jackpot — ${esc(playerName(fromPlayer))}</h3>
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Contribute</button></div>`, m => {
+      wireNotes(m, 'note');
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => {
+        const a = parseAmt(m.querySelector('#amt').value);
+        if (!a) { modalErr(m, 'Enter valid amount'); return; }
+        const r = doTxn('jackpot_contribution', a, fromPlayer, 'jackpot', m.querySelector('#note').value.trim(), () => mutateJackpotContrib(fromPlayer, a));
+        if (r.ok === false) modalErr(m, r.err); else closeModal();
+      };
+    });
+  }
+
+  function lotteryPrizeFromEntrantCount(n) {
+    return LOTTERY_BANK_AMOUNT + LOTTERY_PLAYER_AMOUNT * n;
+  }
+
+  function runLottery(winnerId, entrantIds) {
+    const winner = getPlayer(winnerId);
+    if (!winner) return { ok: false, err: 'Winner not found.' };
+
+    const entrants = entrantIds.map(id => getPlayer(id)).filter(Boolean);
+    const broke = entrants.filter(p => p.cash < LOTTERY_PLAYER_AMOUNT);
+    if (broke.length) {
+      return { ok: false, err: `Cannot afford ${money(LOTTERY_PLAYER_AMOUNT)} entry: ${broke.map(p => p.name).join(', ')}` };
+    }
+
+    const prize = lotteryPrizeFromEntrantCount(entrants.length);
+    const snap = captureSnapshot(state.players.map(p => p.id));
+    snap.jackpot = state.jackpot;
+
+    entrants.forEach(p => { p.cash -= LOTTERY_PLAYER_AMOUNT; });
+    winner.cash += prize;
+
+    const entrantNote = entrants.length
+      ? `Entrants (${money(LOTTERY_PLAYER_AMOUNT)} each): ${entrants.map(p => p.name).join(', ')}`
+      : 'No player entries';
+    const note = `Bank ${money(LOTTERY_BANK_AMOUNT)} + ${entrants.length} × ${money(LOTTERY_PLAYER_AMOUNT)}. ${entrantNote}`;
+    logTxn('lottery_draw', prize, 'bank', winnerId, note, snap);
+    state.players.forEach(trackPeak);
+    save();
+    render();
+    playSound('win');
+    return { ok: true, prize };
+  }
+
+  function actionLottery() {
+    const entrantRows = state.players.map(p => {
+      const canAfford = p.cash >= LOTTERY_PLAYER_AMOUNT;
+      return `<div class="lottery-entrant">
+        <input type="checkbox" class="lot-enter" id="ent-${p.id}" ${canAfford ? '' : 'disabled'}>
+        <label for="ent-${p.id}">${esc(p.name)}${canAfford ? '' : ' (cannot afford $100)'}</label>
+      </div>`;
+    }).join('');
+
+    openModal(`<h3>🎰 Lottery</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted)">Bank antes ${money(LOTTERY_BANK_AMOUNT)}. Each player may optionally ante ${money(LOTTERY_PLAYER_AMOUNT)}. Play out the lottery with the game die, then select the winner below.</p>
+      <div class="lottery-prize" id="lot-prize">Prize: ${money(LOTTERY_BANK_AMOUNT)}</div>
+      <p><strong>Player entries (optional)</strong></p>
+      <div class="confirm-detail">${entrantRows}</div>
+      <div class="form-group" style="margin-top:1rem">
+        <label for="lottery-winner">Winner</label>
+        <select id="lottery-winner">${allPlayerOptions()}</select>
+      </div>
+      <p class="error-msg"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-x>Cancel</button>
+        <button type="button" class="btn btn-lottery" data-ok>Award Winner</button>
+      </div>`, m => {
+      function getEntrants() {
+        return state.players.filter(p => {
+          const cb = m.querySelector(`#ent-${p.id}`);
+          return cb && cb.checked;
+        });
+      }
+
+      function updatePrize() {
+        const n = getEntrants().length;
+        m.querySelector('#lot-prize').textContent = `Prize: ${money(lotteryPrizeFromEntrantCount(n))}`;
+      }
+
+      state.players.forEach(p => {
+        m.querySelector(`#ent-${p.id}`)?.addEventListener('change', updatePrize);
+      });
+
+      updatePrize();
+      m.querySelector('[data-x]').onclick = closeAllModals;
+      m.querySelector('[data-ok]').onclick = () => {
+        const winnerId = m.querySelector('#lottery-winner').value;
+        const winner = getPlayer(winnerId);
+        const entrantIds = getEntrants().map(p => p.id);
+        const broke = entrantIds.map(id => getPlayer(id)).filter(p => p && p.cash < LOTTERY_PLAYER_AMOUNT);
+        if (broke.length) { modalErr(m, `Some entrants cannot afford ${money(LOTTERY_PLAYER_AMOUNT)}.`); return; }
+        const prize = lotteryPrizeFromEntrantCount(entrantIds.length);
+        openConfirmModal({
+          title: 'Confirm Lottery',
+          message: `Award <strong>${money(prize)}</strong> to <strong>${esc(winner.name)}</strong>?`,
+          detailHtml: `
+            <div class="payday-line"><span>Bank contribution</span><span>${money(LOTTERY_BANK_AMOUNT)}</span></div>
+            <div class="payday-line"><span>Player entries</span><span>${entrantIds.length} × ${money(LOTTERY_PLAYER_AMOUNT)}</span></div>
+            <div class="payday-line total"><span>Total prize</span><span>${money(prize)}</span></div>`,
+          confirmText: 'Award Prize',
+          onConfirm: () => {
+            const r = runLottery(winnerId, entrantIds);
+            if (!r.ok) modalErr(m, r.err);
+            else { closeAllModals(); confetti(); }
+          }
+        });
+      };
+    });
+  }
+
+  function actionJackpotRollSix() {
+    if (state.jackpot <= 0) {
+      openModal(`<h3>Jackpot</h3><p>The Jackpot is empty. Money is added during the game from board spaces and mail cards.</p>
+        <div class="modal-actions"><button type="button" class="btn btn-block" data-x>Close</button></div>`, m => {
+        m.querySelector('[data-x]').onclick = closeAllModals;
+      });
+      return;
+    }
+
+    openModal(`<h3>🎲 Rolled a 6 — Jackpot!</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted)">Any player who rolls a 6 on their regular turn wins the entire Jackpot.</p>
+      <p class="lottery-prize">${money(state.jackpot)}</p>
+      <div class="form-group"><label>Who rolled the 6?</label><select id="six-winner">${allPlayerOptions()}</select></div>
+      <p class="error-msg"></p>
+      <div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-jackpot-six" data-ok>Award Jackpot</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeAllModals;
+      m.querySelector('[data-ok]').onclick = () => {
+        const pid = m.querySelector('#six-winner').value;
+        const winner = getPlayer(pid);
+        const amt = state.jackpot;
+        openConfirmModal({
+          title: 'Confirm Jackpot',
+          message: `Award <strong>${money(amt)}</strong> to <strong>${esc(winner.name)}</strong> for rolling a 6?`,
+          confirmText: 'Award Jackpot',
+          onConfirm: () => {
+            const r = doTxn('jackpot_six', amt, 'jackpot', pid, 'Rolled a 6 on regular turn', () => mutateJackpotPayout(pid, amt));
+            if (r.ok === false) modalErr(m, r.err);
+            else { closeAllModals(); confetti(); playSound('win'); }
+          }
+        });
+      };
+    });
+  }
+
+  function actionJackpotEdit() {
+    openModal(`<h3>Edit Jackpot</h3><p>Current: ${money(state.jackpot)}</p>
+      <div class="form-group"><label>New Amount</label><input type="number" id="amt" min="0" value="${state.jackpot}"></div>
+      <div class="form-group"><label>Reason</label><input id="reason"></div>
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Save</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => {
+        const a = parseFloat(m.querySelector('#amt').value);
+        const reason = m.querySelector('#reason').value.trim();
+        if (!isFinite(a) || a < 0 || !reason) { modalErr(m, 'Valid amount and reason required'); return; }
+        const snap = captureSnapshot(state.players.map(p => p.id));
+        const diff = a - state.jackpot;
+        state.jackpot = a;
+        logTxn('manual_adjustment', Math.abs(diff), 'jackpot', 'jackpot', reason, snap);
+        save(); render(); closeModal();
+      };
+    });
+  }
+
+  function actionManageBills(playerId) {
+    const p = getPlayer(playerId);
+    const list = p.bills.map(b => `<div class="bill-item"><span>${esc(b.description)} — ${money(b.amount)}</span>
+      <span><button type="button" class="btn btn-sm" data-pay="${b.id}">Pay</button>
+      <button type="button" class="btn btn-sm btn-danger" data-rm="${b.id}">Remove</button></span></div>`).join('') || '<p>No bills.</p>';
+    openModal(`<h3>Bills — ${esc(p.name)}</h3><div class="bill-list">${list}</div>
+      <div class="modal-actions"><button type="button" class="btn btn-block" data-x>Close</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelectorAll('[data-pay]').forEach(btn => btn.onclick = () => {
+        const b = p.bills.find(x => x.id === btn.dataset.pay);
+        if (!b) return;
+
+        function payBill() {
+          const snap = captureSnapshot([playerId]);
+          p.cash -= b.amount;
+          p.bills = p.bills.filter(x => x.id !== b.id);
+          logTxn('bill_paid', b.amount, playerId, 'bank', b.description, snap);
+          save(); render(); closeAllModals(); actionManageBills(playerId);
+        }
+
+        if (p.cash < b.amount) {
+          const shortfall = b.amount - p.cash;
+          const loanAmt = calcAutoLoanAmount(shortfall);
+          const msg = loanAmt > shortfall
+            ? `Insufficient cash. Take a <strong>${money(loanAmt)}</strong> loan?<br><span style="font-size:0.9rem;color:var(--text-muted)">${money(shortfall)} needed, rounded to ${money(loanIncrement())} increments.</span>`
+            : `Insufficient cash. Take a <strong>${money(loanAmt)}</strong> loan?`;
+          openConfirmModal({
+            title: 'Confirm Loan',
+            message: msg,
+            confirmText: 'Take Loan',
+            onConfirm: () => {
+              const r = applyAutoLoan(p, shortfall);
+              if (!r.ok) {
+                openConfirmModal({ title: 'Cannot Take Loan', message: esc(r.err), confirmText: 'OK', cancelText: 'Close', onConfirm: () => {} });
+                return;
+              }
+              payBill();
+            }
+          });
+          return;
+        }
+        payBill();
+      });
+      m.querySelectorAll('[data-rm]').forEach(btn => btn.onclick = () => {
+        const snap = captureSnapshot([playerId]);
+        const b = p.bills.find(x => x.id === btn.dataset.rm);
+        p.bills = p.bills.filter(x => x.id !== btn.dataset.rm);
+        if (b) logTxn('manual_adjustment', b.amount, playerId, 'bank', 'Bill removed: ' + b.description, snap);
+        save(); render(); closeModal(); actionManageBills(playerId);
+      });
+    });
+  }
+
+  /* ---- Render ---- */
+  function getLeaders() {
+    if (!state.players.length) return [];
+    const maxNet = Math.max(...state.players.map(netWorth));
+    return state.players.filter(p => netWorth(p) === maxNet);
+  }
+
+  function getMostDebtors() {
+    if (!state.players.length) return [];
+    const maxLoan = Math.max(...state.players.map(p => p.loan));
+    if (maxLoan <= 0) return [];
+    return state.players.filter(p => p.loan === maxLoan);
+  }
+
+  function formatLeaderSummary() {
+    const leaders = getLeaders();
+    if (!leaders.length) return '—';
+    if (leaders.length === 1) return leaders[0].name;
+    return 'Tie: ' + leaders.map(p => p.name).join(', ');
+  }
+
+  function formatDebtSummary() {
+    const debtors = getMostDebtors();
+    if (!debtors.length) return 'None';
+    const amt = money(debtors[0].loan);
+    if (debtors.length === 1) return `${debtors[0].name} ${amt}`;
+    return `Tie: ${debtors.map(p => p.name).join(', ')} (${amt})`;
+  }
+
+  function renderSetup() {
+    const count = parseInt($('#setup-count').value, 10) || 4;
+    const box = $('#setup-players');
+    const existing = [...box.querySelectorAll('[data-name]')].map(i => ({ name: i.value, sal: i.dataset.sal }));
+    box.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const row = document.createElement('div');
+      row.className = 'player-setup-row';
+      row.innerHTML = `<div class="form-group" style="margin:0"><label>Player ${i+1}</label><input data-name value="${esc(existing[i]?.name || 'Player '+(i+1))}" maxlength="30"></div>
+        <div class="form-group" style="margin:0"><label>Salary</label><input data-sal type="number" value="${existing[i]?.sal || 3500}" min="0" step="50"></div>`;
+      box.appendChild(row);
+    }
+    $('#setup-starting').value = state.startingBalance || 3500;
+    $('#setup-enforce-increments').checked = state.enforceIncrements !== false;
+  }
+
+  function renderSummary() {
+    const totalCash = state.players.reduce((s, p) => s + p.cash, 0);
+    const totalLoans = state.players.reduce((s, p) => s + p.loan, 0);
+    const totalBills = state.players.reduce((s, p) => s + billsTotal(p), 0);
+    const overallNet = totalCash + state.jackpot - totalLoans - totalBills;
+    const items = [
+      { label: 'Total Cash', val: money(totalCash), cls: 'cash' },
+      { label: 'Total Loans', val: money(totalLoans), cls: 'loan' },
+      { label: 'Jackpot', val: money(state.jackpot), cls: 'jackpot' },
+      { label: 'Unpaid Bills', val: money(totalBills), cls: totalBills > 0 ? 'danger' : '' },
+      { label: 'Overall Net Worth', val: money(overallNet), cls: overallNet >= 0 ? 'cash' : 'danger' },
+      { label: 'Leader', val: formatLeaderSummary(), cls: '' },
+      { label: 'Most Debt', val: formatDebtSummary(), cls: 'loan' }
+    ];
+    $('#summary-grid').innerHTML = items.map(i => `<div class="summary-item"><div class="label">${i.label}</div><div class="value ${i.cls}">${esc(i.val)}</div></div>`).join('');
+    $('#jackpot-amount').textContent = money(state.jackpot);
+    $('#btn-undo').disabled = !state.transactions.length;
+  }
+
+  function renderPlayers() {
+    const leaders = getLeaders();
+    const leaderTie = leaders.length > 1;
+    const leaderIds = new Set(leaders.map(p => p.id));
+    const grid = $('#player-grid');
+    grid.innerHTML = state.players.map(p => {
+      const nw = netWorth(p);
+      const bt = billsTotal(p);
+      const isLeader = leaderIds.has(p.id);
+      let cls = 'player-card';
+      if (isLeader && !leaderTie) cls += ' is-leader';
+      if (isLeader && leaderTie) cls += ' is-tied';
+      if (p.cash < 0) cls += ' negative';
+      if (bt > 0) cls += ' has-bills';
+      if (p.loan > 0) cls += ' has-loan';
+      const badge = isLeader ? (leaderTie ? '<span class="tied-badge">TIED</span>' : '<span class="leader-badge">LEADER</span>') : '';
+      return `<div class="${cls}">${badge}
+        <div class="player-name">${esc(p.name)}</div>
+        <div class="balance-row cash"><span>Cash</span><span class="amt">${money(p.cash)}</span></div>
+        <div class="balance-row loan"><span>Loan</span><span class="amt">${money(p.loan)}</span></div>
+        <div class="balance-row bills"><span>Bills Due</span><span class="amt">${money(bt)}</span></div>
+        <div class="player-meta">Net: ${money(nw)} · Salary: ${money(p.salary)} · Paydays: ${p.paydayCount} · Interest: 10%</div>
+        <div class="player-actions">
+          <button type="button" class="btn" data-a="recv" data-p="${p.id}">Receive</button>
+          <button type="button" class="btn" data-a="pay" data-p="${p.id}">Pay</button>
+          <button type="button" class="btn" data-a="xfer" data-p="${p.id}">Transfer</button>
+          <button type="button" class="btn" data-a="loan" data-p="${p.id}">Loan</button>
+          <button type="button" class="btn" data-a="bill" data-p="${p.id}">Add Bill</button>
+          <button type="button" class="btn" data-a="bills" data-p="${p.id}">View Bills</button>
+          <button type="button" class="btn" data-a="jackpot" data-p="${p.id}">Jackpot</button>
+          <button type="button" class="btn" data-a="edit" data-p="${p.id}">Edit</button>
+          <button type="button" class="btn btn-payday" data-a="payday" data-p="${p.id}">PAYDAY</button>
+        </div></div>`;
+    }).join('');
+  }
+
+  function filteredHistory() {
+    const q = ($('#history-search')?.value || '').toLowerCase();
+    const fp = $('#history-filter-player')?.value || '';
+    const ft = $('#history-filter-type')?.value || '';
+    return state.transactions.filter(t => {
+      if (fp && t.from !== fp && t.to !== fp) return false;
+      if (ft && t.type !== ft) return false;
+      if (q && !(t.note || '').toLowerCase().includes(q) && !playerName(t.from).toLowerCase().includes(q) && !playerName(t.to).toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+
+  function renderHistory() {
+    const list = $('#history-list');
+    const items = [...filteredHistory()].reverse();
+    if (!items.length) { list.innerHTML = '<p style="padding:1rem;text-align:center;color:var(--text-muted)">No transactions.</p>'; return; }
+    list.innerHTML = items.map(t => `<div class="history-item">
+      <div style="font-size:0.7rem;color:var(--text-muted)">${new Date(t.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+      <div><span class="history-type">${TXN_LABELS[t.type]||t.type}</span>
+        <div>${esc(playerName(t.from))} → ${esc(playerName(t.to))}</div>
+        ${t.note?`<div style="font-size:0.8rem;color:var(--text-muted);font-style:italic">${esc(t.note)}</div>`:''}</div>
+      <div class="history-amt">${t.amount?money(t.amount):'—'}</div></div>`).join('');
+    const fp = $('#history-filter-player');
+    const ft = $('#history-filter-type');
+    if (fp && fp.options.length <= 1) {
+      fp.innerHTML = '<option value="">All Players</option>' + state.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
+    }
+    if (ft && ft.options.length <= 1) {
+      ft.innerHTML = '<option value="">All Types</option>' + Object.entries(TXN_LABELS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+    }
+  }
+
+  function renderBanker() {
+    $('#banker-quick').innerHTML = `
+      <button type="button" class="btn btn-sm" data-bk="recv">Bank Pay Player</button>
+      <button type="button" class="btn btn-sm" data-bk="dep">Player Pay Bank</button>
+      <button type="button" class="btn btn-sm btn-jackpot-six" data-bk="jackpot-six">Rolled a 6!</button>
+      <button type="button" class="btn btn-sm btn-lottery" data-bk="lottery">Run Lottery</button>`;
+    $('#banker-quick').onclick = e => {
+      const b = e.target.closest('[data-bk]');
+      if (!b) return;
+      if (b.dataset.bk === 'recv') openModal(`<h3>Bank Pay Player</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
+        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount required');return;} doTxn('bank_payment',a,'bank',pid,m.querySelector('#note').value.trim(),()=>{mutateBankPayment(pid,a);return{ok:true};}); closeModal(); };
+      });
+      if (b.dataset.bk === 'dep') openModal(`<h3>Player Pay Bank</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
+        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; const p=getPlayer(pid); if(!a){modalErr(m,'Amount required');return;} if(p.cash<a){modalErr(m,'Insufficient cash');return;} doTxn('bank_deposit',a,pid,'bank',m.querySelector('#note').value.trim(),()=>{mutateBankDeposit(pid,a);return{ok:true};}); closeModal(); };
+      });
+      if (b.dataset.bk === 'jackpot-six') actionJackpotRollSix();
+      if (b.dataset.bk === 'lottery') actionLottery();
+    };
+    $('#banker-table').innerHTML = `<thead><tr><th>Player</th><th>Cash</th><th>Loan</th><th>Bills</th><th>Net</th><th>Paydays</th></tr></thead><tbody>
+      ${state.players.map(p=>`<tr><td>${esc(p.name)}</td><td>${money(p.cash)}</td><td>${money(p.loan)}</td><td>${money(billsTotal(p))}</td><td>${money(netWorth(p))}</td><td>${p.paydayCount}</td></tr>`).join('')}
+    </tbody>`;
+  }
+
+  function computeStats() {
+    const stats = {};
+    state.players.forEach(p => {
+      stats[p.id] = { loans: 0, earned: 0, paid: 0, billsPaid: 0, jackpotWins: 0 };
+    });
+    let largest = { amount: 0, who: '' };
+    state.transactions.forEach(t => {
+      if (t.type === 'loan_taken' && stats[t.from]) stats[t.from].loans += t.amount;
+      if (t.type === 'bank_payment' && stats[t.to]) stats[t.to].earned += t.amount;
+      if (t.type === 'bank_deposit' && stats[t.from]) stats[t.from].paid += t.amount;
+      if (t.type === 'bill_paid' && stats[t.from]) stats[t.from].billsPaid += t.amount;
+      if ((t.type === 'jackpot_payout' || t.type === 'jackpot_six' || t.type === 'lottery_draw') && stats[t.to]) stats[t.to].jackpotWins += t.amount;
+      if (t.amount > largest.amount) largest = { amount: t.amount, who: playerName(t.from) + ' → ' + playerName(t.to) };
+    });
+    const mostLoans = state.players.reduce((a, b) => (stats[a.id]?.loans||0) >= (stats[b.id]?.loans||0) ? a : b);
+    const mostEarned = state.players.reduce((a, b) => (stats[a.id]?.earned||0) >= (stats[b.id]?.earned||0) ? a : b);
+    const mostPaid = state.players.reduce((a, b) => (stats[a.id]?.paid||0) >= (stats[b.id]?.paid||0) ? a : b);
+    const mostBills = state.players.reduce((a, b) => (stats[a.id]?.billsPaid||0) >= (stats[b.id]?.billsPaid||0) ? a : b);
+    const peak = state.players.reduce((a, b) => (state.peakBalances[a.id]||0) >= (state.peakBalances[b.id]||0) ? a : b);
+    const mostJack = state.players.reduce((a, b) => (stats[a.id]?.jackpotWins||0) >= (stats[b.id]?.jackpotWins||0) ? a : b);
+    return { mostLoans, mostEarned, mostPaid, mostBills, peak, mostJack, largest };
+  }
+
+  function renderStats() {
+    const s = computeStats();
+    const loanTotal = id => state.transactions.filter(t => t.type === 'loan_taken' && t.from === id).reduce((a, t) => a + t.amount, 0);
+    const stat = id => state.transactions.reduce((acc, t) => {
+      if (t.type === 'bank_payment' && t.to === id) acc.earned += t.amount;
+      if (t.type === 'bank_deposit' && t.from === id) acc.paid += t.amount;
+      if (t.type === 'bill_paid' && t.from === id) acc.bills += t.amount;
+      if ((t.type === 'jackpot_payout' || t.type === 'jackpot_six' || t.type === 'lottery_draw') && t.to === id) acc.jack += t.amount;
+      return acc;
+    }, { earned: 0, paid: 0, bills: 0, jack: 0 });
+    $('#stats-grid').innerHTML = [
+      ['Most Loans Taken', `${s.mostLoans.name} — ${money(loanTotal(s.mostLoans.id))}`],
+      ['Most Money Earned', `${s.mostEarned.name} — ${money(stat(s.mostEarned.id).earned)}`],
+      ['Most Money Paid', `${s.mostPaid.name} — ${money(stat(s.mostPaid.id).paid)}`],
+      ['Most Bills Paid', `${s.mostBills.name} — ${money(stat(s.mostBills.id).bills)}`],
+      ['Highest Balance Reached', `${s.peak.name} — ${money(state.peakBalances[s.peak.id] || 0)}`],
+      ['Largest Transaction', `${money(s.largest.amount)} (${s.largest.who})`],
+      ['Most Jackpot Wins', `${s.mostJack.name} — ${money(stat(s.mostJack.id).jack)}`]
+    ].map(([h, v]) => `<div class="stat-card"><h3>${h}</h3><div class="val">${esc(v)}</div></div>`).join('');
+  }
+
+  function renderLeaderboard() {
+    const sorted = [...state.players].sort((a, b) => netWorth(b) - netWorth(a));
+    $('#leaderboard-list').innerHTML = sorted.map((p, i) => {
+      const nw = netWorth(p);
+      const tied = sorted.filter(x => netWorth(x) === nw).length > 1;
+      const rank = sorted.findIndex(x => netWorth(x) === nw) + 1;
+      const label = tied ? `${rank}. ${esc(p.name)} (tied)` : `${rank}. ${esc(p.name)}`;
+      return `<li><span>${label}</span><span>${money(nw)}</span></li>`;
+    }).join('');
+  }
+
+  function render() {
+    document.documentElement.dataset.theme = state.theme || 'light';
+    if (!state.gameStarted) {
+      $('#view-setup').hidden = false;
+      $('#view-game').hidden = true;
+      renderSetup();
+      return;
+    }
+    $('#view-setup').hidden = true;
+    $('#view-game').hidden = false;
+    renderSummary();
+    renderPlayers();
+    renderHistory();
+    renderBanker();
+    renderStats();
+    renderLeaderboard();
+  }
+
+  function switchTab(tab) {
+    ['game','banker','history','stats','leaderboard'].forEach(t => {
+      $('#tab-' + t).hidden = t !== tab;
+      $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    });
+  }
+
+  function startGame() {
+    const names = [...$$('[data-name]')].map(i => i.value.trim());
+    const salaries = [...$$('[data-sal]')].map(i => parseFloat(i.value));
+    const start = parseFloat($('#setup-starting').value);
+    if (names.some(n => !n)) { $('#setup-error').textContent = 'All names required.'; return; }
+    if (new Set(names.map(n => n.toLowerCase())).size !== names.length) { $('#setup-error').textContent = 'Names must be unique.'; return; }
+    if (!isFinite(start) || start < 0) { $('#setup-error').textContent = 'Invalid starting balance.'; return; }
+    state.enforceIncrements = $('#setup-enforce-increments').checked;
+    state.startingBalance = start;
+    state.jackpot = 0;
+    state.transactions = [];
+    state.peakBalances = {};
+    state.players = names.map((n, i) => defaultPlayer(n, salaries[i] || 3500, start));
+    state.gameStarted = true;
+    $('#setup-error').textContent = '';
+    save(); render();
+  }
+
+  function exportCSV(rows, filename) {
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = filename;
+    a.click();
+  }
+
+  function confetti() {
+    const c = $('#confetti-canvas');
+    c.hidden = false;
+    const ctx = c.getContext('2d');
+    c.width = innerWidth; c.height = innerHeight;
+    const pieces = Array.from({length: 120}, () => ({ x: Math.random()*c.width, y: -20-Math.random()*c.height, r: 4+Math.random()*6, c: `hsl(${Math.random()*360},80%,55%)`, vy: 2+Math.random()*4, vx: -2+Math.random()*4 }));
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0,0,c.width,c.height);
+      pieces.forEach(p => { p.x+=p.vx; p.y+=p.vy; ctx.fillStyle=p.c; ctx.fillRect(p.x,p.y,p.r,p.r); });
+      frame++;
+      if (frame < 180) requestAnimationFrame(draw); else { c.hidden = true; }
+    }
+    draw();
+  }
+
+  function showWinner() {
+    const leaders = getLeaders();
+    const ov = document.createElement('div');
+    ov.className = 'winner-overlay';
+    const body = leaders.length === 1
+      ? `<h2>🎉 Winner!</h2><p style="font-size:1.5rem;font-weight:800">${esc(leaders[0].name)}</p><p>Net worth: ${money(netWorth(leaders[0]))}</p>`
+      : `<h2>🤝 It's a Tie!</h2><p style="font-size:1.25rem;font-weight:800">${esc(leaders.map(p => p.name).join(', '))}</p><p>Net worth: ${money(netWorth(leaders[0]))}</p>`;
+    ov.innerHTML = `<div class="winner-card">${body}<button type="button" class="btn btn-primary btn-block" style="margin-top:1rem">Close</button></div>`;
+    ov.querySelector('button').onclick = () => ov.remove();
+    document.body.appendChild(ov);
+    confetti(); playSound('win');
+  }
+
+  function bind() {
+    $('#setup-count').onchange = renderSetup;
+    $('#btn-start').onclick = startGame;
+    $('#btn-theme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
+    $('#btn-sound').onclick = () => { soundsOn = !soundsOn; $('#btn-sound').textContent = soundsOn ? '🔊 Sound' : '🔇 Sound'; };
+    $('#btn-new-game').onclick = () => { if (confirm('Start new game? Current progress will be lost.')) { state = defaultState(); save(); render(); } };
+    $('#btn-reset').onclick = () => { if (confirm('Reset game?')) { state.players.forEach(p => { p.cash = state.startingBalance; p.loan = 0; p.bills = []; p.paydayCount = 0; }); state.jackpot = 0; state.transactions = []; save(); render(); } };
+    $('#btn-clear-save').onclick = () => { if (confirm('Clear all saved data?')) { localStorage.removeItem(STORAGE_KEY); state = defaultState(); render(); } };
+    $('#btn-undo').onclick = () => undo(1);
+    $('#btn-undo-multi').onclick = () => { const n = parseInt(prompt('How many transactions to undo?', '1'), 10); if (n > 0) undo(n); };
+    $('#btn-clear-history').onclick = () => { if (confirm('Clear transaction history? Balances unchanged.')) { state.transactions = []; save(); render(); } };
+    $('#btn-export-txn').onclick = () => exportCSV([['Time','Type','Amount','From','To','Note'], ...state.transactions.map(t => [new Date(t.timestamp).toISOString(), TXN_LABELS[t.type]||t.type, t.amount, playerName(t.from), playerName(t.to), t.note])], 'payday-transactions.csv');
+    $('#btn-export-balances').onclick = () => exportCSV([['Player','Cash','Loan','Bills','Net Worth','Paydays'], ...state.players.map(p => [p.name, p.cash, p.loan, billsTotal(p), netWorth(p), p.paydayCount])], 'payday-balances.csv');
+    $('#btn-export-json').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state,null,2)])); a.download = 'payday-save.json'; a.click(); };
+    $('#btn-print').onclick = () => window.print();
+    $('#btn-import').onclick = () => $('#import-file').click();
+    $('#import-file').onchange = e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { try { state = { ...defaultState(), ...JSON.parse(r.result) }; save(); render(); } catch { alert('Invalid file'); } };
+      r.readAsText(f);
+    };
+    $('#btn-winner').onclick = showWinner;
+    $$('.nav-btn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+    $('#history-search').oninput = renderHistory;
+    $('#history-filter-player').onchange = renderHistory;
+    $('#history-filter-type').onchange = renderHistory;
+
+    $('#player-grid').onclick = e => {
+      const b = e.target.closest('[data-a]');
+      if (!b) return;
+      const a = b.dataset.a, p = b.dataset.p;
+      ({ recv: actionReceive, pay: actionPay, xfer: actionTransfer, loan: actionLoan, bill: actionAddBill, bills: actionManageBills, payday: actionPayday, edit: actionEdit, jackpot: id => actionJackpotContrib(id) })[a]?.(p);
+    };
+
+    document.querySelector('.jackpot-actions').onclick = e => {
+      const b = e.target.closest('[data-action]');
+      if (!b) return;
+      ({ 'jackpot-contrib-player': () => openModal(`<h3>Player Contribute</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Go</button></div>`, m => {
+        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
+        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount');return;} const r=doTxn('jackpot_contribution',a,pid,'jackpot',m.querySelector('#note').value.trim(),()=>mutateJackpotContrib(pid,a)); if(r.ok===false)modalErr(m,r.err);else closeModal(); };
+      }), 'jackpot-six': actionJackpotRollSix, 'lottery': actionLottery, 'jackpot-edit': actionJackpotEdit })[b.dataset.action]?.();
+    };
+
+    document.onkeydown = e => { if (e.key === 'Escape') closeModal(); };
+  }
+
+  load();
+  soundsOn = false;
+  bind();
+  render();
+})();
+  </script>
+</body>
+</html>
+
