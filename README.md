@@ -2,11 +2,13 @@
 
 A single-file digital banker companion for the **Modern Payday** board game. Track cash, loans, bills, jackpots, and lotteries while you play — no paper ledger required.
 
-Open `index.html` in any modern browser. No install, server, or dependencies.
+Open `index.html` in any modern browser. No build step or dependencies required.
+
+For **install as an app** (Add to Home Screen / Install app), serve the folder over HTTP — for example `npx serve .` — then use your browser’s install or share menu.
 
 ## Quick Start
 
-1. Open `index.html` in Chrome, Firefox, Safari, or Edge.
+1. Open `index.html` in Chrome, Firefox, Safari, or Edge (or serve the folder locally for full web app install support).
 2. Set up **2–6 players**, names, salaries, and starting cash (default **$3,500** each).
 3. Click **Start Game**.
 4. Use player cards and the jackpot bar during play. Progress saves automatically to your browser.
@@ -16,7 +18,7 @@ To resume later, open the same file in the same browser — your game is stored 
 ## Features
 
 ### Game tab
-- **Summary bar** — total cash, loans, jackpot, unpaid bills, overall net worth, leader, and most debt (ties shown correctly).
+- **Summary bar** — loans, jackpot, unpaid bills, leader, and most debt (ties shown correctly).
 - **Player cards** — cash, loan, bills due, net worth, salary, and payday count.
 - **Jackpot bar** — current pool plus quick actions for contributions, lottery, and jackpot wins.
 
@@ -100,9 +102,24 @@ Optional setup checkbox: **Enforce official repayment increments** (validates lo
 - **Reset Game** — reset balances and jackpot, keep player names
 - **Clear Saved Data** — remove all `localStorage` data
 
+## Install as a web app
+
+Payday Bank includes a web app manifest and service worker so it can be installed like a native app.
+
+1. Serve the project folder locally, e.g. `npx serve .`
+2. Open the URL in your browser.
+3. Install:
+   - **Chrome / Edge (Android or desktop):** Install icon in the address bar, or browser menu → *Install Payday Bank*
+   - **Safari (iOS):** Share → *Add to Home Screen*
+
+Installed mode runs fullscreen without browser chrome. Game data still saves locally in the browser.
+
+> Opening `index.html` directly from disk (`file://`) works for play, but install prompts require serving over `http://localhost` or HTTPS.
+
 ## Technical notes
 
 - **Single file:** all HTML, CSS, and JavaScript live in `index.html`.
+- **Web app files:** `manifest.webmanifest`, `sw.js`, and `icons/` enable install and offline caching.
 - **Persistence:** browser `localStorage` only; data stays on the device. Clearing site data or using a different browser starts fresh.
 - **Privacy:** nothing is sent to a server.
 - **Undo:** reverses the last transaction(s) by restoring snapshotted balances.

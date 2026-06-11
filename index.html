@@ -2,8 +2,19 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Payday Bank</title>
+  <meta name="description" content="Digital banker for the Modern Payday board game. Track cash, loans, bills, and jackpots.">
+  <meta name="application-name" content="Payday Bank">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Payday Bank">
+  <meta name="theme-color" content="#2c1810">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
     :root, [data-theme="light"] {
       --bg: #e8d5b5;
@@ -56,29 +67,56 @@
       line-height: 1.5;
     }
     .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    #app { max-width: 1280px; margin: 0 auto; padding: 0.75rem; padding-bottom: 5rem; }
+    html { -webkit-text-size-adjust: 100%; }
+    #app {
+      max-width: 1280px; margin: 0 auto;
+      padding: 0.75rem;
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+      padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+      padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+    }
+    body.modal-open { overflow: hidden; }
+    @media (display-mode: standalone) {
+      #app { padding-top: max(0.75rem, env(safe-area-inset-top, 0px)); }
+    }
     [hidden] { display: none !important; }
 
     /* Header */
     .app-header {
-      text-align: center;
-      padding: 1rem;
       background: var(--surface);
       border: 3px solid var(--border);
       border-radius: var(--radius);
       margin-bottom: 1rem;
       box-shadow: var(--shadow);
+      padding: 0.5rem 0.75rem;
+    }
+    .app-header.expanded { padding: 1rem; }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .header-top-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
     }
     .app-header h1 {
-      font-size: 1.75rem;
+      font-size: 1.1rem;
       color: var(--accent);
       text-shadow: 1px 1px 0 var(--border);
       letter-spacing: 0.05em;
+      white-space: nowrap;
     }
+    .app-header.expanded h1 { font-size: 1.75rem; }
+    .header-toggle-btn { flex-shrink: 0; min-height: 44px; min-width: 44px; padding: 0.35rem 0.6rem; }
+    .header-details { text-align: center; margin-top: 0.75rem; }
+    .app-header:not(.expanded) .header-details { display: none; }
     .app-header .subtitle { color: var(--text-muted); font-size: 0.9rem; }
     .header-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; align-items: center; margin-top: 0.75rem; }
-    .save-status { font-size: 0.8rem; color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; background: var(--surface-alt); }
-    .save-status.saved { color: var(--success); }
+    .save-status { font-size: 0.75rem; color: var(--success); padding: 0.15rem 0.4rem; border-radius: 4px; background: var(--surface-alt); }
 
     /* Buttons */
     .btn {
@@ -94,7 +132,7 @@
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-danger { background: var(--danger); color: #fff; border-color: #9f1239; }
     .btn-accent { background: var(--accent); color: #fff; border-color: #9f1239; }
-    .btn-sm { min-height: 40px; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+    .btn-sm { min-height: 44px; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
     .btn-block { width: 100%; }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
@@ -198,20 +236,25 @@
     .balance-row.bills .amt { color: var(--warning); }
     .player-meta { font-size: 0.8rem; color: var(--text-muted); margin: 0.5rem 0; }
     .player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.75rem; }
-    .player-actions .btn { font-size: 0.75rem; min-height: 44px; padding: 0.4rem; }
+    .player-actions .btn { font-size: 0.8rem; min-height: 48px; padding: 0.5rem; }
     .player-actions .btn-payday { grid-column: 1 / -1; background: var(--accent); color: #fff; border-color: #9f1239; font-size: 0.9rem; }
 
     /* Nav */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg);
-      display: flex; justify-content: space-around; padding: 0.35rem; z-index: 50;
-      border-top: 3px solid var(--border);
+      display: flex; justify-content: space-around;
+      padding: 0.35rem 0.25rem max(0.35rem, env(safe-area-inset-bottom, 0px));
+      padding-left: max(0.25rem, env(safe-area-inset-left, 0px));
+      padding-right: max(0.25rem, env(safe-area-inset-right, 0px));
+      z-index: 50; border-top: 3px solid var(--border);
     }
     .nav-btn {
-      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-      padding: 0.4rem; background: none; border: none; color: var(--nav-text);
-      font-size: 0.65rem; cursor: pointer; opacity: 0.7; min-height: 48px; font-family: inherit;
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      padding: 0.4rem 0.2rem; background: none; border: none; color: var(--nav-text);
+      font-size: 0.65rem; cursor: pointer; opacity: 0.7; min-height: 52px; font-family: inherit;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
+    .nav-btn:active { opacity: 1; transform: scale(0.94); }
     .nav-btn.active { opacity: 1; color: #fbbf24; }
     .nav-btn .icon { font-size: 1.25rem; }
 
@@ -221,7 +264,11 @@
 
     /* History */
     .history-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
-    .history-filters input, .history-filters select { flex: 1; min-width: 120px; padding: 0.5rem; border: 2px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+    .history-filters input, .history-filters select {
+      flex: 1; min-width: 120px; padding: 0.65rem; font-size: 1rem;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); color: var(--text); min-height: 48px;
+    }
     .history-list { max-height: 400px; overflow-y: auto; }
     .history-item {
       display: grid; grid-template-columns: auto 1fr auto; gap: 0.5rem 0.75rem;
@@ -239,7 +286,8 @@
 
     /* Banker */
     .banker-quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
-    .banker-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.25rem; }
+    .banker-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 520px; }
     .banker-table th, .banker-table td { padding: 0.5rem; border: 1px solid var(--border); text-align: left; }
     .banker-table th { background: var(--surface-alt); }
 
@@ -264,8 +312,11 @@
     }
     @media (min-width: 600px) { .modal-overlay { align-items: center; padding: 1rem; } }
     .modal {
-      background: var(--surface); width: 100%; max-width: 480px; max-height: 92vh;
-      overflow-y: auto; padding: 1.25rem; border-radius: var(--radius) var(--radius) 0 0;
+      background: var(--surface); width: 100%; max-width: 480px;
+      max-height: min(92vh, calc(100dvh - 1rem));
+      overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+      padding: 1.25rem; padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+      border-radius: var(--radius) var(--radius) 0 0;
       border: 3px solid var(--border); box-shadow: var(--shadow);
     }
     @media (min-width: 600px) { .modal { border-radius: var(--radius); } }
@@ -273,14 +324,25 @@
     .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
     .modal-actions .btn { flex: 1; }
     .note-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
-    .note-chip { padding: 0.3rem 0.6rem; font-size: 0.75rem; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; background: var(--surface-alt); }
-    .note-chip:hover, .note-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .note-chip {
+      display: inline-flex; align-items: center; min-height: 40px;
+      padding: 0.45rem 0.75rem; font-size: 0.8rem; border: 1px solid var(--border);
+      border-radius: 999px; cursor: pointer; background: var(--surface-alt);
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .note-chip:hover, .note-chip:active, .note-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
     .bill-list { margin: 0.5rem 0; max-height: 200px; overflow-y: auto; }
-    .bill-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.35rem; font-size: 0.85rem; }
+    .bill-item { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.35rem; font-size: 0.85rem; }
+    .bill-item .btn { flex-shrink: 0; }
     .payday-summary { background: var(--surface-alt); border-radius: var(--radius); padding: 0.75rem; margin: 0.75rem 0; }
     .payday-line { display: flex; justify-content: space-between; padding: 0.25rem 0; font-size: 0.9rem; }
     .payday-line.total { font-weight: 800; border-top: 2px solid var(--border); margin-top: 0.5rem; padding-top: 0.5rem; }
-    .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--surface-alt); border-radius: var(--radius); margin: 0.5rem 0; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem; background: var(--surface-alt); border-radius: var(--radius); margin: 0.5rem 0; min-height: 48px; }
+    .checkbox-row input[type="checkbox"], .lottery-entrant input[type="checkbox"] { width: 1.25rem; height: 1.25rem; min-width: 1.25rem; flex-shrink: 0; }
+    .checkbox-row label, .lottery-entrant label { flex: 1; cursor: pointer; line-height: 1.35; }
+    .lottery-entrant { min-height: 48px; padding: 0.5rem 0; }
+    .setup-check { display: flex; align-items: center; gap: 0.65rem; min-height: 48px; padding: 0.35rem 0; cursor: pointer; }
+    .setup-check input[type="checkbox"] { width: 1.25rem; height: 1.25rem; min-width: 1.25rem; flex-shrink: 0; }
 
     /* Leaderboard / Winner */
     .leaderboard-list { list-style: none; }
@@ -296,23 +358,41 @@
 
     /* Toolbar */
     .toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    @media (max-width: 599px) {
+      .jackpot-bar { flex-direction: column; align-items: stretch; }
+      .jackpot-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; width: 100%; }
+      .jackpot-actions .btn { width: 100%; }
+      .player-setup-row { grid-template-columns: 1fr; }
+      .toolbar .btn { flex: 1 1 calc(50% - 0.25rem); min-width: 8rem; }
+    }
+    @media (max-width: 380px) {
+      .player-actions { grid-template-columns: 1fr; }
+      .jackpot-actions { grid-template-columns: 1fr; }
+      .nav-btn { font-size: 0.6rem; }
+    }
     @media print {
       .bottom-nav, .toolbar, .player-actions, .modal-overlay, .winner-overlay { display: none !important; }
       body { background: #fff; }
     }
-    @media (prefers-reduced-motion: reduce) { .btn, .note-chip { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .btn, .note-chip, .nav-btn { transition: none; } }
   </style>
 </head>
 <body>
   <div id="app" class="sans">
-    <header class="app-header">
-      <h1>PAYDAY BANK</h1>
-      <p class="subtitle">Digital banker for your board game</p>
-      <div class="header-row">
-        <span id="save-status" class="save-status">Ready</span>
-        <span class="save-status">Modern Payday</span>
-        <button type="button" id="btn-theme" class="btn btn-sm" title="Toggle theme">🌓 Theme</button>
-        <button type="button" id="btn-sound" class="btn btn-sm" title="Toggle sounds">🔇 Sound</button>
+    <header class="app-header" id="app-header">
+      <div class="header-top">
+        <div class="header-top-left">
+          <h1>PAYDAY BANK</h1>
+          <span id="save-status" class="save-status" hidden></span>
+        </div>
+        <button type="button" id="btn-header-toggle" class="btn btn-sm header-toggle-btn" aria-expanded="false" title="Expand header">▼</button>
+      </div>
+      <div class="header-details">
+        <p class="subtitle">Digital banker for your board game</p>
+        <div class="header-row">
+          <button type="button" id="btn-theme" class="btn btn-sm" title="Toggle theme">🌓 Theme</button>
+          <button type="button" id="btn-sound" class="btn btn-sm" title="Toggle sounds">🔇 Sound</button>
+        </div>
       </div>
     </header>
 
@@ -334,7 +414,7 @@
           <input type="number" id="setup-starting" value="3500" min="0" step="50">
         </div>
         <div class="form-group">
-          <label><input type="checkbox" id="setup-enforce-increments" checked> Enforce official repayment increments</label>
+          <label class="setup-check"><input type="checkbox" id="setup-enforce-increments" checked> Enforce official repayment increments</label>
         </div>
         <p id="setup-error" class="error-msg"></p>
         <button type="button" id="btn-start" class="btn btn-primary btn-block">Start Game</button>
@@ -363,7 +443,7 @@
         <div class="panel">
           <h2>Banker Dashboard</h2>
           <div class="banker-quick" id="banker-quick"></div>
-          <table class="banker-table" id="banker-table"></table>
+          <div class="table-scroll"><table class="banker-table" id="banker-table"></table></div>
         </div>
       </div>
 
@@ -451,6 +531,7 @@
       players: [],
       transactions: [],
       theme: 'light',
+      headerCollapsed: true,
       peakBalances: {}
     };
   }
@@ -496,9 +577,9 @@
   function flashSave() {
     const el = $('#save-status');
     el.textContent = 'Saved';
-    el.classList.add('saved');
+    el.hidden = false;
     clearTimeout(saveFlashTimer);
-    saveFlashTimer = setTimeout(() => { el.textContent = 'Ready'; el.classList.remove('saved'); }, 1500);
+    saveFlashTimer = setTimeout(() => { el.textContent = ''; el.hidden = true; }, 1500);
   }
 
   function save() {
@@ -745,22 +826,34 @@
   }
 
   /* ---- Modals ---- */
+  function syncModalScrollLock() {
+    document.body.classList.toggle('modal-open', !!$('#modal-root').children.length);
+  }
+
   function closeAllModals() {
     $('#modal-root').innerHTML = '';
     activeModal = null;
+    syncModalScrollLock();
   }
 
   function closeModal() {
     const root = $('#modal-root');
     if (root.lastElementChild) root.lastElementChild.remove();
     if (!root.children.length) activeModal = null;
+    syncModalScrollLock();
+  }
+
+  function dismissModalOverlay(ov, cb) {
+    ov.remove();
+    syncModalScrollLock();
+    cb?.();
   }
 
   function openConfirmModal({ title, message, detailHtml, confirmText, cancelText, danger, onConfirm, onCancel }) {
     const ov = document.createElement('div');
     ov.className = 'modal-overlay confirm-overlay';
     ov.onclick = e => {
-      if (e.target === ov) { ov.remove(); onCancel?.(); }
+      if (e.target === ov) dismissModalOverlay(ov, onCancel);
     };
     const m = document.createElement('div');
     m.className = 'modal confirm-modal';
@@ -774,10 +867,11 @@
         <button type="button" class="btn" data-cancel>${cancelText || 'Cancel'}</button>
         <button type="button" class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-ok>${confirmText || 'Confirm'}</button>
       </div>`;
-    m.querySelector('[data-cancel]').onclick = () => { ov.remove(); onCancel?.(); };
-    m.querySelector('[data-ok]').onclick = () => { ov.remove(); onConfirm?.(); };
+    m.querySelector('[data-cancel]').onclick = () => dismissModalOverlay(ov, onCancel);
+    m.querySelector('[data-ok]').onclick = () => dismissModalOverlay(ov, onConfirm);
     ov.appendChild(m);
     $('#modal-root').appendChild(ov);
+    syncModalScrollLock();
     m.querySelector('[data-ok]').focus();
   }
 
@@ -791,9 +885,16 @@
     m.innerHTML = html;
     ov.appendChild(m);
     $('#modal-root').appendChild(ov);
+    syncModalScrollLock();
     if (onMount) onMount(m);
-    const inp = m.querySelector('input,select,textarea');
-    if (inp) inp.focus();
+    m.querySelectorAll('input[type="number"]').forEach(inp => inp.setAttribute('inputmode', 'decimal'));
+    const inp = m.querySelector('input:not([type="checkbox"]),select,textarea');
+    if (inp) {
+      inp.focus({ preventScroll: true });
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        setTimeout(() => inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 250);
+      }
+    }
   }
 
   function noteField(id) {
@@ -1276,16 +1377,12 @@
   }
 
   function renderSummary() {
-    const totalCash = state.players.reduce((s, p) => s + p.cash, 0);
     const totalLoans = state.players.reduce((s, p) => s + p.loan, 0);
     const totalBills = state.players.reduce((s, p) => s + billsTotal(p), 0);
-    const overallNet = totalCash + state.jackpot - totalLoans - totalBills;
     const items = [
-      { label: 'Total Cash', val: money(totalCash), cls: 'cash' },
       { label: 'Total Loans', val: money(totalLoans), cls: 'loan' },
       { label: 'Jackpot', val: money(state.jackpot), cls: 'jackpot' },
       { label: 'Unpaid Bills', val: money(totalBills), cls: totalBills > 0 ? 'danger' : '' },
-      { label: 'Overall Net Worth', val: money(overallNet), cls: overallNet >= 0 ? 'cash' : 'danger' },
       { label: 'Leader', val: formatLeaderSummary(), cls: '' },
       { label: 'Most Debt', val: formatDebtSummary(), cls: 'loan' }
     ];
@@ -1442,8 +1539,19 @@
     }).join('');
   }
 
+  function renderHeader() {
+    const collapsed = state.headerCollapsed !== false;
+    const header = $('#app-header');
+    const toggle = $('#btn-header-toggle');
+    header.classList.toggle('expanded', !collapsed);
+    toggle.textContent = collapsed ? '▼' : '▲';
+    toggle.title = collapsed ? 'Expand header' : 'Collapse header';
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+  }
+
   function render() {
     document.documentElement.dataset.theme = state.theme || 'light';
+    renderHeader();
     if (!state.gameStarted) {
       $('#view-setup').hidden = false;
       $('#view-game').hidden = true;
@@ -1525,6 +1633,11 @@
   function bind() {
     $('#setup-count').onchange = renderSetup;
     $('#btn-start').onclick = startGame;
+    $('#btn-header-toggle').onclick = () => {
+      state.headerCollapsed = !state.headerCollapsed;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
+      renderHeader();
+    };
     $('#btn-theme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
     $('#btn-sound').onclick = () => { soundsOn = !soundsOn; $('#btn-sound').textContent = soundsOn ? '🔊 Sound' : '🔇 Sound'; };
     $('#btn-new-game').onclick = () => { if (confirm('Start new game? Current progress will be lost.')) { state = defaultState(); save(); render(); } };
@@ -1574,6 +1687,12 @@
   bind();
   render();
 })();
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
   </script>
 </body>
 </html>
