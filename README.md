@@ -11,7 +11,7 @@ For **install as an app** (Add to Home Screen / Install app), serve the folder o
 1. Open `index.html` in Chrome, Firefox, Safari, or Edge (or serve the folder locally for full web app install support).
 2. Set up **2–6 players**, names, salaries, and starting cash (default **$3,500** each).
 3. Click **Start Game**.
-4. Use player cards and the jackpot bar during play. Progress saves automatically to your browser.
+4. Tap an action, pick the player, then confirm. Progress saves automatically to your browser.
 
 To resume later, open the same file in the same browser — your game is stored in `localStorage` under the key `payday-bank-v2`.
 
@@ -20,14 +20,14 @@ To resume later, open the same file in the same browser — your game is stored 
 ### Game tab
 - **Summary bar** — loans, jackpot, unpaid bills, leader, and most debt (ties shown correctly). Toggle from the header — hidden by default on phones.
 - **Jackpot panel** — pool total and quick actions; toggle from the header (hidden by default on phones).
-- **Player board (Focus mode)** — tap a player in the roster, then use actions for that player only (reduces mis-taps on shared devices). Switch to **Classic layout** from the header for all cards with actions visible at once.
+- **Player board** — one shared action bar; every action asks you to pick the player first (avoids paying the wrong person). Read-only player cards below show all balances.
 - **Jackpot bar** — current pool plus quick actions for contributions, lottery, and jackpot wins.
 
 ### Per-player actions
 | Action | Purpose |
 |--------|---------|
 | **Receive** | Bank pays the player (salary, mail, deals, etc.) |
-| **Pay** | Player pays the bank |
+| **Pay Bank** | Player pays the bank |
 | **Transfer** | Player-to-player payment |
 | **Loan** | Take a loan ($1,000 minimum, $1,000 increments) |
 | **Add Bill** | Record an outstanding bill |
@@ -98,8 +98,8 @@ Optional setup checkbox: **Enforce official repayment increments** (validates lo
 - **Theme** — light / dark toggle
 - **Sound** — optional transaction sounds (off by default)
 - **Stay Awake** — keeps the screen on while the app is open (on by default; requires a supported browser)
-- **Summary / Jackpot / Layout / Game Options** — game controls in the expanded header (visible during play)
-- **Focus / Classic layout** — Focus mode (default) shows a read-only roster plus one action panel; Classic shows every player card with buttons
+- **Summary / Jackpot / Game Options** — game controls in the expanded header (visible during play)
+- **Amount keypad** — amount modals use a built-in numeric keypad instead of the device keyboard (beside the form on tablet, below on phone)
 - **Game Options** (header, during play) — New Game, Reset Game, and Clear Saved Data, tucked away to avoid accidental taps
 
 ## Install as a web app

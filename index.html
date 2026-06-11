@@ -228,34 +228,31 @@
     .player-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
     @media (min-width: 600px) { .player-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 960px) { .player-grid { grid-template-columns: repeat(3, 1fr); } }
-    .player-board-focus { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
-    .player-roster {
-      display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
-      padding-bottom: 0.25rem; scroll-snap-type: x proximity;
+    .player-picker-subtitle { font-size: 0.9rem; color: var(--text-muted); margin: 0.35rem 0 0; }
+    .player-picker {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;
+      margin: 0.75rem 0 1rem;
     }
-    .roster-chip {
-      flex: 0 0 auto; min-width: 8.5rem; max-width: 11rem;
+    @media (min-width: 480px) { .player-picker { grid-template-columns: repeat(3, 1fr); } }
+    .player-pick-btn {
       display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem;
-      padding: 0.65rem 0.75rem; border: 2px solid var(--border); border-radius: var(--radius);
+      padding: 0.75rem; border: 2px solid var(--border); border-radius: var(--radius);
       background: var(--surface); cursor: pointer; touch-action: manipulation;
       text-align: left; font-family: inherit; color: var(--text); min-height: 48px;
-      scroll-snap-align: start; box-shadow: var(--shadow);
+      box-shadow: var(--shadow);
     }
-    .roster-chip.is-selected {
+    .player-pick-btn:active { transform: scale(0.98); }
+    .player-pick-btn.is-leader { background: var(--card-leader); }
+    .player-pick-btn.negative { background: var(--card-danger); }
+    .player-pick-btn.has-bills { border-left: 4px solid var(--warning); }
+    .player-pick-btn.is-selected {
       border-color: var(--primary); border-width: 3px;
       box-shadow: 0 0 0 2px rgba(26,107,60,0.18);
     }
-    .roster-chip.is-leader { background: var(--card-leader); }
-    .roster-chip.negative { background: var(--card-danger); }
-    .roster-chip.has-bills { border-left: 4px solid var(--warning); }
-    .roster-name { font-size: 0.95rem; font-weight: 800; line-height: 1.2; }
-    .roster-cash { font-size: 1.05rem; font-weight: 700; color: var(--success); }
-    .roster-meta { font-size: 0.7rem; color: var(--text-muted); line-height: 1.3; }
-    .player-focus-card { margin-bottom: 0; }
-    .player-focus-label {
-      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.35rem;
-    }
+    .player-picker-group .player-picker { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+    .player-pick-name { font-size: 0.95rem; font-weight: 800; line-height: 1.2; }
+    .player-pick-cash { font-size: 1.05rem; font-weight: 700; color: var(--success); }
+    .player-pick-meta { font-size: 0.7rem; color: var(--text-muted); line-height: 1.3; }
 
     .player-card {
       background: var(--surface); border: 3px solid var(--border); border-radius: var(--radius);
@@ -282,7 +279,7 @@
     .balance-row.savings .amt { color: var(--savings); }
     .balance-row.bills .amt { color: var(--warning); }
     .player-meta { font-size: 0.8rem; color: var(--text-muted); margin: 0.5rem 0; }
-    .player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.75rem; }
+    .player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-bottom: 1rem; }
     .player-actions .btn { font-size: 0.8rem; min-height: 48px; padding: 0.5rem; }
     .player-actions .btn-payday { grid-column: 1 / -1; background: var(--accent); color: #fff; border-color: #9f1239; font-size: 0.9rem; }
 
@@ -367,6 +364,37 @@
       border: 3px solid var(--border); box-shadow: var(--shadow);
     }
     @media (min-width: 600px) { .modal { border-radius: var(--radius); } }
+    .modal-with-keypad { max-width: 720px; }
+    .modal-layout {
+      display: flex; flex-direction: row; gap: 0.75rem; align-items: flex-start;
+    }
+    .modal-body { flex: 1; min-width: 0; max-width: 480px; }
+    .modal-keypad {
+      flex: 0 0 11.5rem; display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.35rem; padding: 0.25rem;
+    }
+    .keypad-btn {
+      min-height: 48px; font-size: 1.25rem; font-weight: 700;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--surface-alt); cursor: pointer; touch-action: manipulation;
+      font-family: inherit; color: var(--text); -webkit-tap-highlight-color: transparent;
+    }
+    .keypad-btn:active { transform: scale(0.96); background: var(--border); }
+    .keypad-clear { font-size: 1rem; }
+    .amount-entry {
+      font-variant-numeric: tabular-nums; font-size: 1.25rem; font-weight: 700;
+      min-height: 48px; width: 100%; padding: 0.65rem;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); color: var(--text); cursor: pointer;
+    }
+    .amount-entry.is-active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26,107,60,0.18);
+    }
+    @media (max-width: 639px) {
+      .modal-layout { flex-direction: column; }
+      .modal-keypad { flex: none; width: 100%; }
+    }
     .modal h3 { margin-bottom: 0.75rem; color: var(--accent); }
     .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
     .modal-actions .btn { flex: 1; }
@@ -442,7 +470,6 @@
           <button type="button" id="btn-awake" class="btn btn-sm btn-labeled" title="Keep screen on while app is open" hidden><span class="btn-icon" aria-hidden="true">☀️</span><span class="btn-text">Stay Awake</span></button>
           <button type="button" id="btn-toggle-summary" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide game summary"><span class="btn-icon" aria-hidden="true">📊</span><span class="btn-text">Summary</span></button>
           <button type="button" id="btn-toggle-jackpot" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide jackpot panel"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Jackpot</span></button>
-          <button type="button" id="btn-layout-mode" class="btn btn-sm btn-labeled panel-toggle" hidden title="Switch player board layout"><span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span></button>
           <button type="button" id="btn-game-options" class="btn btn-sm btn-labeled" hidden title="New game, reset, and other game actions"><span class="btn-icon" aria-hidden="true">⚙️</span><span class="btn-text">Game Options</span></button>
         </div>
       </div>
@@ -491,7 +518,8 @@
             </div>
           </div>
         </div>
-        <p class="player-board-hint" id="player-board-hint">Select a player, then choose an action.</p>
+        <p class="player-board-hint" id="player-board-hint">Choose an action, then pick the player.</p>
+        <div class="player-actions" id="player-actions-bar" hidden></div>
         <div class="player-grid" id="player-grid"></div>
       </div>
 
@@ -607,8 +635,6 @@
       theme: 'light',
       headerCollapsed: true,
       keepAwake: true,
-      playerLayout: 'focus',
-      selectedPlayerId: null,
       summaryOpen: undefined,
       jackpotOpen: undefined,
       peakBalances: {}
@@ -970,8 +996,8 @@
     $('#modal-root').appendChild(ov);
     syncModalScrollLock();
     if (onMount) onMount(m);
-    m.querySelectorAll('input[type="number"]').forEach(inp => inp.setAttribute('inputmode', 'decimal'));
-    const inp = m.querySelector('input:not([type="checkbox"]),select,textarea');
+    setupModalAmountKeypad(m);
+    const inp = m.querySelector('input:not([type="checkbox"]):not(.amount-entry),select,textarea');
     if (inp) {
       inp.focus({ preventScroll: true });
       if (window.matchMedia('(pointer: coarse)').matches) {
@@ -980,10 +1006,96 @@
     }
   }
 
+  const AMOUNT_INPUT_IDS = ['amt', 'cash', 'loan', 'salary'];
+
+  function amountInputHtml(id, attrs = '', value) {
+    const val = value != null && value !== '' ? ` value="${String(value).replace(/"/g, '&quot;')}"` : '';
+    return `<input type="text" class="amount-entry" id="${id}" inputmode="none" readonly autocomplete="off" ${attrs}${val}>`;
+  }
+
+  function findAmountInputs(m) {
+    return AMOUNT_INPUT_IDS.map(id => m.querySelector('#' + id)).filter(Boolean);
+  }
+
+  function prepareAmountInput(inp) {
+    inp.type = 'text';
+    inp.readOnly = true;
+    inp.inputMode = 'none';
+    inp.autocomplete = 'off';
+    inp.classList.add('amount-entry');
+  }
+
+  function createAmountKeypad() {
+    const pad = document.createElement('div');
+    pad.className = 'modal-keypad';
+    pad.setAttribute('role', 'group');
+    pad.setAttribute('aria-label', 'Amount keypad');
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'clear'];
+    pad.innerHTML = keys.map(k => {
+      const label = k === 'back' ? '⌫' : k === 'clear' ? 'C' : k;
+      const cls = k === 'back' ? 'keypad-btn keypad-back' : k === 'clear' ? 'keypad-btn keypad-clear' : 'keypad-btn';
+      return `<button type="button" class="${cls}" data-key="${k}">${label}</button>`;
+    }).join('');
+    return pad;
+  }
+
+  function wireAmountKeypad(modal, inputs) {
+    inputs.forEach(prepareAmountInput);
+    let activeInput = inputs[0];
+
+    function setActive(inp) {
+      activeInput = inp;
+      inputs.forEach(i => i.classList.toggle('is-active', i === inp));
+    }
+
+    inputs.forEach(inp => {
+      inp.addEventListener('click', () => setActive(inp));
+      inp.addEventListener('focus', () => setActive(inp));
+    });
+    setActive(activeInput);
+
+    const keypad = modal.querySelector('.modal-keypad');
+    if (!keypad) return;
+
+    keypad.querySelectorAll('[data-key]').forEach(btn => {
+      btn.onclick = () => {
+        const key = btn.dataset.key;
+        let v = activeInput.value || '';
+        if (key === 'back') {
+          activeInput.value = v.slice(0, -1);
+        } else if (key === 'clear') {
+          activeInput.value = '';
+        } else {
+          if (v === '0') v = '';
+          activeInput.value = v + key;
+        }
+        activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+    });
+  }
+
+  function setupModalAmountKeypad(m) {
+    const inputs = findAmountInputs(m);
+    if (!inputs.length || m.classList.contains('modal-with-keypad')) return;
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    while (m.firstChild) body.appendChild(m.firstChild);
+
+    const layout = document.createElement('div');
+    layout.className = 'modal-layout';
+    layout.appendChild(body);
+    layout.appendChild(createAmountKeypad());
+
+    m.classList.add('modal-with-keypad');
+    m.appendChild(layout);
+    wireAmountKeypad(m, inputs);
+  }
+
   function amountNoteFields(presets = NOTE_PRESETS, amountAttrs = 'min="1" step="1"') {
     const chips = presets.map(n => `<button type="button" class="note-chip" data-n="${esc(n)}">${esc(n)}</button>`).join('');
     return `<div class="form-group"><label for="note">Note</label><div class="note-chips">${chips}</div></div>
-      <div class="form-group"><label for="amt">Amount</label><input type="number" id="amt" ${amountAttrs}></div>
+      <div class="form-group"><label for="amt">Amount</label>${amountInputHtml('amt', amountAttrs)}</div>
       <div class="form-group"><input id="note" maxlength="120" placeholder="Optional note"></div>`;
   }
 
@@ -1017,6 +1129,88 @@
       m.querySelector('[data-x]').onclick = closeModal;
       m.querySelector('[data-ok]').onclick = () => { const r = onConfirm(m); if (r && r.err) modalErr(m, r.err); else if (r !== false) closeModal(); };
       wireNotes(m, 'note', noteAmounts ? { amountId: 'amt', amountByNote: noteAmounts } : {});
+    });
+  }
+
+  const ACTION_LABELS = {
+    recv: 'Receive',
+    pay: 'Pay Bank',
+    xfer: 'Transfer from',
+    jackpot: 'Pay Jackpot',
+    bill: 'Add Bill',
+    bills: 'View Bills',
+    loan: 'Loan',
+    edit: 'Edit',
+    payday: 'PAYDAY'
+  };
+
+  const ACTION_SUBTITLES = { xfer: 'Who is transferring from?' };
+
+  const ACTION_HANDLERS = {
+    recv: actionReceive,
+    pay: actionPay,
+    xfer: actionTransfer,
+    loan: actionLoan,
+    bill: actionAddBill,
+    bills: actionManageBills,
+    payday: actionPayday,
+    edit: actionEdit,
+    jackpot: id => actionJackpotContrib(id)
+  };
+
+  function playerPickerButtonHtml(p, leaderIds, leaderTie, selected = false) {
+    const bt = billsTotal(p);
+    const loan = p.loan;
+    const meta = [
+      loan > 0 ? `Loan ${money(loan)}` : '',
+      bt > 0 ? `Bills ${money(bt)}` : ''
+    ].filter(Boolean).join(' · ');
+    let cls = 'player-pick-btn' + playerStatusClasses(p, leaderIds, leaderTie);
+    if (selected) cls += ' is-selected';
+    return `<button type="button" class="${cls}" data-pid="${p.id}">
+      <span class="player-pick-name">${esc(p.name)}</span>
+      <span class="player-pick-cash">${money(p.cash)}</span>
+      ${meta ? `<span class="player-pick-meta">${esc(meta)}</span>` : ''}
+    </button>`;
+  }
+
+  function inlinePlayerPickerHtml({ label, subtitle, selectedId } = {}) {
+    const leaders = getLeaders();
+    const leaderTie = leaders.length > 1;
+    const leaderIds = new Set(leaders.map(p => p.id));
+    return `<div class="form-group player-picker-group">
+      ${label ? `<label>${esc(label)}</label>` : ''}
+      ${subtitle ? `<p class="player-picker-subtitle">${subtitle}</p>` : ''}
+      <div class="player-picker" data-player-picker>
+        ${state.players.map(p => playerPickerButtonHtml(p, leaderIds, leaderTie, p.id === selectedId)).join('')}
+      </div>
+    </div>`;
+  }
+
+  function wirePlayerPicker(m) {
+    const picker = m.querySelector('[data-player-picker]');
+    if (!picker) return () => null;
+    picker.querySelectorAll('.player-pick-btn').forEach(btn => {
+      btn.onclick = () => {
+        picker.querySelectorAll('.player-pick-btn').forEach(b => b.classList.remove('is-selected'));
+        btn.classList.add('is-selected');
+      };
+    });
+    return () => picker.querySelector('.player-pick-btn.is-selected')?.dataset.pid || null;
+  }
+
+  function promptPlayerForAction(title, onPick, subtitle) {
+    const leaders = getLeaders();
+    const leaderTie = leaders.length > 1;
+    const leaderIds = new Set(leaders.map(p => p.id));
+    const sub = subtitle || 'Who is this for?';
+    openModal(`<h3>${title}</h3><p class="player-picker-subtitle">${sub}</p>
+      <div class="player-picker">${state.players.map(p => playerPickerButtonHtml(p, leaderIds, leaderTie)).join('')}</div>
+      <div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelectorAll('[data-pid]').forEach(btn => {
+        btn.onclick = () => { closeModal(); onPick(btn.dataset.pid); };
+      });
     });
   }
 
@@ -1089,7 +1283,7 @@
     const inc = loanIncrement();
     openAmountModal(`Take Loan — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)} · Loan: ${money(p.loan)}</p>
       <p style="font-size:0.85rem;color:var(--text-muted)">Loans must be in ${money(inc)} increments (minimum ${money(inc)}).</p>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="${inc}" step="${inc}"></div>`, m => {
+      <div class="form-group"><label>Amount</label>${amountInputHtml('amt', `min="${inc}" step="${inc}"`)}</div>`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
       return doTxn('loan_taken', a, playerId, 'bank', '', () => mutateLoan(playerId, a));
@@ -1098,7 +1292,7 @@
 
   function actionAddBill(playerId) {
     openModal(`<h3>Add Bill — ${esc(playerName(playerId))}</h3>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>
+      <div class="form-group"><label>Amount</label>${amountInputHtml('amt', 'min="1"')}</div>
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Add</button></div>`, m => {
       m.querySelector('[data-x]').onclick = closeModal;
       m.querySelector('[data-ok]').onclick = () => {
@@ -1180,9 +1374,9 @@
     const p = getPlayer(playerId);
     openModal(`<h3>Edit — ${esc(p.name)}</h3>
       <div class="form-group"><label>Name</label><input id="pname" value="${esc(p.name)}" maxlength="30"></div>
-      <div class="form-group"><label>Cash</label><input type="number" id="cash" value="${p.cash}"></div>
-      <div class="form-group"><label>Loan</label><input type="number" id="loan" value="${p.loan}" min="0"></div>
-      <div class="form-group"><label>Salary</label><input type="number" id="salary" value="${p.salary}" min="0"></div>
+      <div class="form-group"><label>Cash</label>${amountInputHtml('cash', '', p.cash)}</div>
+      <div class="form-group"><label>Loan</label>${amountInputHtml('loan', 'min="0"', p.loan)}</div>
+      <div class="form-group"><label>Salary</label>${amountInputHtml('salary', 'min="0"', p.salary)}</div>
       <div class="form-group"><label>Reason</label><input id="reason" placeholder="Required note"></div>
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Save</button></div>`, m => {
       m.querySelector('[data-x]').onclick = closeModal;
@@ -1215,6 +1409,27 @@
         if (!a) { modalErr(m, 'Enter valid amount'); return; }
         const r = doTxn('jackpot_contribution', a, fromPlayer, 'jackpot', m.querySelector('#note').value.trim(), () => mutateJackpotContrib(fromPlayer, a));
         if (r.ok === false) modalErr(m, r.err); else closeModal();
+      };
+    });
+  }
+
+  function openPlayerContributeModal() {
+    openModal(`<h3>Player Contribute</h3>
+      ${inlinePlayerPickerHtml({ label: 'Player', subtitle: 'Who is contributing?' })}
+      ${amountNoteFields(PAY_JACKPOT_NOTE_PRESETS, 'min="1"')}
+      <p class="error-msg"></p>
+      <div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Go</button></div>`, m => {
+      const getPlayerId = wirePlayerPicker(m);
+      wireNotes(m, 'note', { amountId: 'amt', amountByNote: PAY_JACKPOT_NOTE_AMOUNTS });
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-ok]').onclick = () => {
+        const pid = getPlayerId();
+        if (!pid) { modalErr(m, 'Select a player'); return; }
+        const a = parseAmt(m.querySelector('#amt').value);
+        if (!a) { modalErr(m, 'Enter valid amount'); return; }
+        const r = doTxn('jackpot_contribution', a, pid, 'jackpot', m.querySelector('#note').value.trim(), () => mutateJackpotContrib(pid, a));
+        if (r.ok === false) modalErr(m, r.err);
+        else closeModal();
       };
     });
   }
@@ -1266,10 +1481,7 @@
       <div class="lottery-prize" id="lot-prize">Prize: ${money(LOTTERY_BANK_AMOUNT)}</div>
       <p><strong>Player entries (optional)</strong></p>
       <div class="confirm-detail">${entrantRows}</div>
-      <div class="form-group" style="margin-top:1rem">
-        <label for="lottery-winner">Winner</label>
-        <select id="lottery-winner">${allPlayerOptions()}</select>
-      </div>
+      ${inlinePlayerPickerHtml({ label: 'Winner', subtitle: 'Tap the player who won the lottery.' })}
       <p class="error-msg"></p>
       <div class="modal-actions">
         <button type="button" class="btn" data-x>Cancel</button>
@@ -1292,9 +1504,11 @@
       });
 
       updatePrize();
+      const getWinnerId = wirePlayerPicker(m);
       m.querySelector('[data-x]').onclick = closeAllModals;
       m.querySelector('[data-ok]').onclick = () => {
-        const winnerId = m.querySelector('#lottery-winner').value;
+        const winnerId = getWinnerId();
+        if (!winnerId) { modalErr(m, 'Select a winner'); return; }
         const winner = getPlayer(winnerId);
         const entrantIds = getEntrants().map(p => p.id);
         const broke = entrantIds.map(id => getPlayer(id)).filter(p => p && p.cash < LOTTERY_PLAYER_AMOUNT);
@@ -1330,12 +1544,14 @@
     openModal(`<h3>🎲 Rolled a 6 — Jackpot!</h3>
       <p style="font-size:0.9rem;color:var(--text-muted)">Any player who rolls a 6 on their regular turn wins the entire Jackpot.</p>
       <p class="lottery-prize">${money(state.jackpot)}</p>
-      <div class="form-group"><label>Who rolled the 6?</label><select id="six-winner">${allPlayerOptions()}</select></div>
+      ${inlinePlayerPickerHtml({ label: 'Who rolled the 6?', subtitle: 'Tap the player who rolled a 6.' })}
       <p class="error-msg"></p>
       <div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-jackpot-six" data-ok>Award Jackpot</button></div>`, m => {
+      const getWinnerId = wirePlayerPicker(m);
       m.querySelector('[data-x]').onclick = closeAllModals;
       m.querySelector('[data-ok]').onclick = () => {
-        const pid = m.querySelector('#six-winner').value;
+        const pid = getWinnerId();
+        if (!pid) { modalErr(m, 'Select a player'); return; }
         const winner = getPlayer(pid);
         const amt = state.jackpot;
         openConfirmModal({
@@ -1546,20 +1762,6 @@
     renderGamePanels();
   }
 
-  function isClassicLayout() {
-    return state.playerLayout === 'classic';
-  }
-
-  function ensureSelectedPlayer() {
-    if (!state.players.length) {
-      state.selectedPlayerId = null;
-      return;
-    }
-    if (!state.selectedPlayerId || !getPlayer(state.selectedPlayerId)) {
-      state.selectedPlayerId = state.players[0].id;
-    }
-  }
-
   function playerStatusClasses(p, leaderIds, leaderTie) {
     const bt = billsTotal(p);
     const isLeader = leaderIds.has(p.id);
@@ -1586,11 +1788,10 @@
       <div class="player-meta">Net: ${money(nw)} · Salary: ${money(p.salary)} · Paydays: ${p.paydayCount} · Interest: 10%</div>`;
   }
 
-  function playerActionsHtml(playerId) {
+  function globalActionsHtml() {
     const act = (icon, text, action, extra = '') =>
-      iconBtn(icon, text, `btn btn-labeled ${extra}`.trim(), `data-a="${action}" data-p="${playerId}"`);
-    return `<div class="player-actions">
-      ${act('💵', 'Receive', 'recv')}
+      iconBtn(icon, text, `btn btn-labeled ${extra}`.trim(), `data-a="${action}"`);
+    return `${act('💵', 'Receive', 'recv')}
       ${act('💳', 'Pay Bank', 'pay')}
       ${act('🔁', 'Transfer', 'xfer')}
       ${act('🎰', 'Pay Jackpot', 'jackpot')}
@@ -1598,90 +1799,40 @@
       ${act('📋', 'View Bills', 'bills')}
       ${act('🏦', 'Loan', 'loan')}
       ${act('✏️', 'Edit', 'edit')}
-      ${act('📅', 'PAYDAY', 'payday', 'btn-payday')}
-    </div>`;
+      ${act('📅', 'PAYDAY', 'payday', 'btn-payday')}`;
   }
 
-  function renderClassicPlayerCard(p, leaderIds, leaderTie) {
+  function renderGlobalActions() {
+    const bar = $('#player-actions-bar');
+    if (!bar) return;
+    bar.hidden = !state.gameStarted;
+    if (!state.gameStarted) return;
+    bar.innerHTML = globalActionsHtml();
+  }
+
+  function renderReadOnlyPlayerCard(p, leaderIds, leaderTie) {
     const cls = 'player-card' + playerStatusClasses(p, leaderIds, leaderTie);
     return `<div class="${cls}">${playerLeaderBadge(p, leaderIds, leaderTie)}
       <div class="player-name">${esc(p.name)}</div>
       ${playerBalancesHtml(p)}
-      ${playerActionsHtml(p.id)}
-    </div>`;
-  }
-
-  function renderRosterChip(p, selectedId, leaderIds, leaderTie) {
-    const bt = billsTotal(p);
-    const loan = p.loan;
-    const meta = [
-      loan > 0 ? `Loan ${money(loan)}` : '',
-      bt > 0 ? `Bills ${money(bt)}` : ''
-    ].filter(Boolean).join(' · ');
-    let cls = 'roster-chip' + playerStatusClasses(p, leaderIds, leaderTie);
-    if (p.id === selectedId) cls += ' is-selected';
-    return `<button type="button" class="${cls}" data-select-player="${p.id}">
-      <span class="roster-name">${esc(p.name)}</span>
-      <span class="roster-cash">${money(p.cash)}</span>
-      ${meta ? `<span class="roster-meta">${esc(meta)}</span>` : ''}
-    </button>`;
-  }
-
-  function renderFocusPlayerCard(p, leaderIds, leaderTie) {
-    const cls = 'player-card player-focus-card' + playerStatusClasses(p, leaderIds, leaderTie);
-    return `<div class="${cls}">${playerLeaderBadge(p, leaderIds, leaderTie)}
-      <div class="player-focus-label">Banking for</div>
-      <div class="player-name">${esc(p.name)}</div>
-      ${playerBalancesHtml(p)}
-      ${playerActionsHtml(p.id)}
     </div>`;
   }
 
   function renderPlayerBoardHint() {
     const hint = $('#player-board-hint');
-    const btn = $('#btn-layout-mode');
-    if (btn) {
-      btn.hidden = !state.gameStarted;
-      if (isClassicLayout()) {
-        btn.classList.add('is-active');
-        btn.innerHTML = '<span class="btn-icon" aria-hidden="true">🎯</span><span class="btn-text">Focus mode</span>';
-        btn.title = 'Switch to focus mode — select a player, then show actions';
-      } else {
-        btn.classList.remove('is-active');
-        btn.innerHTML = '<span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span>';
-        btn.title = 'Switch to classic layout — all players with actions on each card';
-      }
-    }
-    if (!hint) return;
-    if (!state.gameStarted) return;
-    if (isClassicLayout()) {
-      hint.textContent = 'All players shown with actions on each card.';
-    } else {
-      const selected = getPlayer(state.selectedPlayerId);
-      hint.textContent = selected
-        ? `Banking for ${selected.name}. Tap another player to switch.`
-        : 'Select a player, then choose an action.';
-    }
+    if (!hint || !state.gameStarted) return;
+    hint.textContent = 'Choose an action below, then pick the player.';
   }
 
   function renderPlayers() {
-    ensureSelectedPlayer();
     const leaders = getLeaders();
     const leaderTie = leaders.length > 1;
     const leaderIds = new Set(leaders.map(p => p.id));
     const grid = $('#player-grid');
     renderPlayerBoardHint();
-    if (isClassicLayout()) {
-      grid.className = 'player-grid';
-      grid.innerHTML = state.players.map(p => renderClassicPlayerCard(p, leaderIds, leaderTie)).join('');
-      return;
-    }
-    const selected = getPlayer(state.selectedPlayerId);
-    grid.className = 'player-board-focus';
-    grid.innerHTML = `<div class="player-roster" role="tablist" aria-label="Players">
-      ${state.players.map(p => renderRosterChip(p, state.selectedPlayerId, leaderIds, leaderTie)).join('')}
-    </div>
-    ${selected ? renderFocusPlayerCard(selected, leaderIds, leaderTie) : ''}`;
+    renderGlobalActions();
+    grid.className = 'player-grid';
+    grid.innerHTML = state.players.map(p => renderReadOnlyPlayerCard(p, leaderIds, leaderTie)).join('');
   }
 
   function filteredHistory() {
@@ -1890,7 +2041,6 @@
     state.transactions = [];
     state.peakBalances = {};
     state.players = names.map((n, i) => defaultPlayer(n, salaries[i] || 3500, start));
-    state.selectedPlayerId = state.players[0]?.id || null;
     state.gameStarted = true;
     $('#setup-error').textContent = '';
     save(); render();
@@ -1989,32 +2139,19 @@
       persistStateQuiet();
       renderGamePanels();
     };
-    $('#btn-layout-mode').onclick = () => {
-      state.playerLayout = isClassicLayout() ? 'focus' : 'classic';
-      save();
-      renderPlayers();
-    };
-    $('#player-grid').onclick = e => {
-      const selectBtn = e.target.closest('[data-select-player]');
-      if (selectBtn) {
-        state.selectedPlayerId = selectBtn.dataset.selectPlayer;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
-        renderPlayers();
-        return;
-      }
+    $('#player-actions-bar').onclick = e => {
       const b = e.target.closest('[data-a]');
       if (!b) return;
-      const a = b.dataset.a, p = b.dataset.p;
-      ({ recv: actionReceive, pay: actionPay, xfer: actionTransfer, loan: actionLoan, bill: actionAddBill, bills: actionManageBills, payday: actionPayday, edit: actionEdit, jackpot: id => actionJackpotContrib(id) })[a]?.(p);
+      const a = b.dataset.a;
+      const handler = ACTION_HANDLERS[a];
+      if (!handler) return;
+      promptPlayerForAction(ACTION_LABELS[a] || a, pid => handler(pid), ACTION_SUBTITLES[a]);
     };
 
     document.querySelector('.jackpot-actions').onclick = e => {
       const b = e.target.closest('[data-action]');
       if (!b) return;
-      ({ 'jackpot-contrib-player': () => openModal(`<h3>Player Contribute</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(PAY_JACKPOT_NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Go</button></div>`, m => {
-        wireNotes(m, 'note', { amountId: 'amt', amountByNote: PAY_JACKPOT_NOTE_AMOUNTS }); m.querySelector('[data-x]').onclick=closeModal;
-        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount');return;} const r=doTxn('jackpot_contribution',a,pid,'jackpot',m.querySelector('#note').value.trim(),()=>mutateJackpotContrib(pid,a)); if(r.ok===false)modalErr(m,r.err);else closeModal(); };
-      }), 'jackpot-six': actionJackpotRollSix, 'lottery': actionLottery })[b.dataset.action]?.();
+      ({ 'jackpot-contrib-player': openPlayerContributeModal, 'jackpot-six': actionJackpotRollSix, 'lottery': actionLottery })[b.dataset.action]?.();
     };
 
     document.onkeydown = e => { if (e.key === 'Escape') closeModal(); };
