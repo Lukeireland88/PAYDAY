@@ -1,0 +1,12 @@
+const fs = require('fs');
+const path = require('path');
+const src = fs.readFileSync(path.join(__dirname, '../js/game-engine.js'), 'utf8');
+const start = src.indexOf("'use strict';");
+const end = src.lastIndexOf('return {');
+const retStart = end;
+const retEnd = src.indexOf('};', retStart) + 2;
+const body = src.slice(start, retStart);
+const ret = src.slice(retStart, retEnd);
+const out = `export const GameEngine = (() => {\n${body}${ret}\n})();\n`;
+fs.writeFileSync(path.join(__dirname, '../supabase/functions/payday-api/game-engine.ts'), out);
+console.log('Wrote game-engine.ts');
