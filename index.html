@@ -443,6 +443,7 @@
           <button type="button" id="btn-toggle-summary" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide game summary"><span class="btn-icon" aria-hidden="true">📊</span><span class="btn-text">Summary</span></button>
           <button type="button" id="btn-toggle-jackpot" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide jackpot panel"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Jackpot</span></button>
           <button type="button" id="btn-layout-mode" class="btn btn-sm btn-labeled panel-toggle" hidden title="Switch player board layout"><span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span></button>
+          <button type="button" id="btn-game-options" class="btn btn-sm btn-labeled" hidden title="New game, reset, and other game actions"><span class="btn-icon" aria-hidden="true">⚙️</span><span class="btn-text">Game Options</span></button>
         </div>
       </div>
     </header>
@@ -534,12 +535,6 @@
           <ul class="leaderboard-list" id="leaderboard-list"></ul>
           <button type="button" id="btn-winner" class="btn btn-accent btn-block btn-labeled" style="margin-top:1rem"><span class="btn-icon" aria-hidden="true">🏆</span><span class="btn-text">End Game — Show Winner</span></button>
         </div>
-      </div>
-
-      <div class="toolbar">
-        <button type="button" id="btn-new-game" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">🆕</span><span class="btn-text">New Game</span></button>
-        <button type="button" id="btn-reset" class="btn btn-sm btn-labeled btn-danger"><span class="btn-icon" aria-hidden="true">🔄</span><span class="btn-text">Reset Game</span></button>
-        <button type="button" id="btn-clear-save" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Clear Save</span></button>
       </div>
 
       <nav class="bottom-nav" id="bottom-nav">
@@ -1344,6 +1339,42 @@
     });
   }
 
+  function openGameOptions() {
+    openModal(`<h3>Game Options</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">These actions change or erase your saved game.</p>
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        ${iconBtn('🆕', 'New Game', 'btn btn-block btn-labeled', 'data-game-opt="new"')}
+        ${iconBtn('🔄', 'Reset Game', 'btn btn-block btn-labeled btn-danger', 'data-game-opt="reset"')}
+        ${iconBtn('🗑️', 'Clear Saved Data', 'btn btn-block btn-labeled', 'data-game-opt="clear"')}
+      </div>
+      <div class="modal-actions"><button type="button" class="btn btn-block" data-x>Close</button></div>`, m => {
+      m.querySelector('[data-x]').onclick = closeModal;
+      m.querySelector('[data-game-opt="new"]').onclick = () => {
+        if (!confirm('Start new game? Current progress will be lost.')) return;
+        state = defaultState();
+        save();
+        closeModal();
+        render();
+      };
+      m.querySelector('[data-game-opt="reset"]').onclick = () => {
+        if (!confirm('Reset game? Balances and jackpot will reset; player names kept.')) return;
+        state.players.forEach(p => { p.cash = state.startingBalance; p.loan = 0; p.bills = []; p.paydayCount = 0; });
+        state.jackpot = 0;
+        state.transactions = [];
+        save();
+        closeModal();
+        render();
+      };
+      m.querySelector('[data-game-opt="clear"]').onclick = () => {
+        if (!confirm('Clear all saved data?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = defaultState();
+        closeModal();
+        render();
+      };
+    });
+  }
+
   function actionManageBills(playerId) {
     const p = getPlayer(playerId);
     const list = p.bills.map(b => `<div class="bill-item"><span>${esc(b.description)} — ${money(b.amount)}</span>
@@ -1461,12 +1492,14 @@
     const jackpotPanel = $('#jackpot-panel');
     const sumBtn = $('#btn-toggle-summary');
     const jackBtn = $('#btn-toggle-jackpot');
+    const optBtn = $('#btn-game-options');
     if (!summaryPanel || !jackpotPanel) return;
 
     summaryPanel.hidden = !state.summaryOpen;
     jackpotPanel.hidden = !state.jackpotOpen;
 
     const showToggles = state.gameStarted;
+    if (optBtn) optBtn.hidden = !showToggles;
     if (sumBtn) {
       sumBtn.hidden = !showToggles;
       sumBtn.classList.toggle('is-active', state.summaryOpen);
@@ -1910,9 +1943,7 @@
     };
     document.addEventListener('visibilitychange', () => updateWakeLock());
     document.addEventListener('pointerdown', () => updateWakeLock(), { passive: true });
-    $('#btn-new-game').onclick = () => { if (confirm('Start new game? Current progress will be lost.')) { state = defaultState(); save(); render(); } };
-    $('#btn-reset').onclick = () => { if (confirm('Reset game?')) { state.players.forEach(p => { p.cash = state.startingBalance; p.loan = 0; p.bills = []; p.paydayCount = 0; }); state.jackpot = 0; state.transactions = []; save(); render(); } };
-    $('#btn-clear-save').onclick = () => { if (confirm('Clear all saved data?')) { localStorage.removeItem(STORAGE_KEY); state = defaultState(); render(); } };
+    $('#btn-game-options').onclick = openGameOptions;
     $('#btn-undo').onclick = () => undo(1);
     $('#btn-undo-multi').onclick = () => { const n = parseInt(prompt('How many transactions to undo?', '1'), 10); if (n > 0) undo(n); };
     $('#btn-clear-history').onclick = () => { if (confirm('Clear transaction history? Balances unchanged.')) { state.transactions = []; save(); render(); } };

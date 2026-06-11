@@ -100,11 +100,9 @@ Optional setup checkbox: **Enforce official repayment increments** (validates lo
 - **Theme** — light / dark toggle
 - **Sound** — optional transaction sounds (off by default)
 - **Stay Awake** — keeps the screen on while the app is open (on by default; requires a supported browser)
-- **Summary / Jackpot / Layout** — game panel toggles in the expanded header (visible during play)
+- **Summary / Jackpot / Layout / Game Options** — game controls in the expanded header (visible during play)
 - **Focus / Classic layout** — Focus mode (default) shows a read-only roster plus one action panel; Classic shows every player card with buttons
-- **New Game** — wipe progress and return to setup
-- **Reset Game** — reset balances and jackpot, keep player names
-- **Clear Saved Data** — remove all `localStorage` data
+- **Game Options** (header, during play) — New Game, Reset Game, and Clear Saved Data, tucked away to avoid accidental taps
 
 ## Install as a web app
 
