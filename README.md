@@ -49,8 +49,6 @@ If cash is short after the above, **auto-loan** can round up the shortfall to th
 ### Jackpot
 - Players add money to the pool when board spaces or mail cards require it.
 - **Rolled a 6!** awards the full jackpot to the player who rolled a 6 on their regular turn.
-- **Edit Jackpot** lets the banker correct the pool amount if needed.
-
 The bank does not contribute to the jackpot.
 
 ### Lottery

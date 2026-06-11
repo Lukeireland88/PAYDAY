@@ -370,7 +370,7 @@
     .modal h3 { margin-bottom: 0.75rem; color: var(--accent); }
     .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
     .modal-actions .btn { flex: 1; }
-    .note-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+    .note-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }
     .note-chip {
       display: inline-flex; align-items: center; min-height: 40px;
       padding: 0.45rem 0.75rem; font-size: 0.8rem; border: 1px solid var(--border);
@@ -488,7 +488,6 @@
               <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-contrib-player"><span class="btn-icon" aria-hidden="true">➕</span><span class="btn-text">Contribute</span></button>
               <button type="button" class="btn btn-sm btn-labeled btn-jackpot-six" data-action="jackpot-six"><span class="btn-icon" aria-hidden="true">🎲</span><span class="btn-text">Rolled a 6!</span></button>
               <button type="button" class="btn btn-sm btn-labeled btn-lottery" data-action="lottery"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Lottery</span></button>
-              <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-edit"><span class="btn-icon" aria-hidden="true">✏️</span><span class="btn-text">Edit Pool</span></button>
             </div>
           </div>
         </div>
@@ -564,9 +563,24 @@
     'Food for the Month', 'Fun Fair', 'Online Auction', 'Shopping Spree', 'Super Ski Sunday',
     'Supermarket', 'Transfer Money', 'Walk for Charity'
   ];
+  const PAY_JACKPOT_NOTE_AMOUNTS = {
+    'Date Night at the Casino': 500,
+    'Family Pet': 300,
+    'Food for the Month': 600,
+    'Fun Fair': 200,
+    'Shopping Spree': 500,
+    'Super Ski Sunday': 500,
+    'Supermarket': 200
+  };
   const TRANSFER_NOTE_PRESETS = ['Birthday', 'Mad Money', 'Pay a Neighbour'];
+  const TRANSFER_NOTE_AMOUNTS = { 'Birthday': 100 };
   const PAY_NOTE_PRESETS = ['Deal', 'Monster Charge', 'Other'];
   const RECEIVE_NOTE_PRESETS = ['Date Night at the Casino', 'Found a Buyer!', 'Pools', 'Radio Contest', 'Scratchcard'];
+  const RECEIVE_NOTE_AMOUNTS = {
+    'Date Night at the Casino': 500,
+    'Pools': 5000,
+    'Radio Contest': 1000
+  };
   const TXN_LABELS = {
     bank_payment:'Bank Payment', bank_deposit:'Bank Deposit', player_transfer:'Player Transfer',
     loan_taken:'Loan Taken', loan_repaid:'Loan Repaid', loan_interest:'Loan Interest',
@@ -966,14 +980,26 @@
     }
   }
 
-  function noteField(id, presets = NOTE_PRESETS) {
+  function amountNoteFields(presets = NOTE_PRESETS, amountAttrs = 'min="1" step="1"') {
     const chips = presets.map(n => `<button type="button" class="note-chip" data-n="${esc(n)}">${esc(n)}</button>`).join('');
-    return `<div class="form-group"><label for="${id}">Note</label><input id="${id}" maxlength="120" placeholder="Optional note"><div class="note-chips">${chips}</div></div>`;
+    return `<div class="form-group"><label for="note">Note</label><div class="note-chips">${chips}</div></div>
+      <div class="form-group"><label for="amt">Amount</label><input type="number" id="amt" ${amountAttrs}></div>
+      <div class="form-group"><input id="note" maxlength="120" placeholder="Optional note"></div>`;
   }
 
-  function wireNotes(m, id) {
+  function wireNotes(m, id, { amountId, amountByNote } = {}) {
     const inp = m.querySelector('#' + id);
-    m.querySelectorAll('.note-chip').forEach(c => c.onclick = () => { inp.value = c.dataset.n; m.querySelectorAll('.note-chip').forEach(x => x.classList.remove('active')); c.classList.add('active'); });
+    if (!inp) return;
+    const amtInp = amountId ? m.querySelector('#' + amountId) : null;
+    m.querySelectorAll('.note-chip').forEach(c => c.onclick = () => {
+      inp.value = c.dataset.n;
+      m.querySelectorAll('.note-chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      if (amtInp && amountByNote && amountByNote[c.dataset.n] != null) {
+        amtInp.value = amountByNote[c.dataset.n];
+        amtInp.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
   }
 
   function modalErr(m, msg) { const e = m.querySelector('.error-msg'); if (e) e.textContent = msg; }
@@ -986,26 +1012,26 @@
     return state.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   }
 
-  function openAmountModal(title, fields, onConfirm) {
+  function openAmountModal(title, fields, onConfirm, { noteAmounts } = {}) {
     openModal(`<h3>${title}</h3>${fields}<p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Confirm</button></div>`, m => {
       m.querySelector('[data-x]').onclick = closeModal;
       m.querySelector('[data-ok]').onclick = () => { const r = onConfirm(m); if (r && r.err) modalErr(m, r.err); else if (r !== false) closeModal(); };
-      wireNotes(m, 'note');
+      wireNotes(m, 'note', noteAmounts ? { amountId: 'amt', amountByNote: noteAmounts } : {});
     });
   }
 
   function actionReceive(playerId) {
     const p = getPlayer(playerId);
-    openAmountModal(`Receive Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1" step="1"></div>${noteField('note', RECEIVE_NOTE_PRESETS)}`, m => {
+    openAmountModal(`Receive Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p>${amountNoteFields(RECEIVE_NOTE_PRESETS)}`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
       return doTxn('bank_payment', a, 'bank', playerId, m.querySelector('#note').value.trim(), () => { mutateBankPayment(playerId, a); return { ok: true }; });
-    });
+    }, { noteAmounts: RECEIVE_NOTE_AMOUNTS });
   }
 
   function actionPay(playerId) {
     const p = getPlayer(playerId);
-    openAmountModal(`Pay Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', PAY_NOTE_PRESETS)}`, m => {
+    openAmountModal(`Pay Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p>${amountNoteFields(PAY_NOTE_PRESETS, 'min="1"')}`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
       if (p.cash < a) return { err: 'Insufficient cash' };
@@ -1017,7 +1043,7 @@
     const p = getPlayer(playerId);
     openModal(`<h3>Transfer — ${esc(p.name)}</h3><p>Cash: ${money(p.cash)}</p>
       <div class="form-group"><label>To</label><select id="to">${playerOptions(playerId)}</select></div>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', TRANSFER_NOTE_PRESETS)}
+      ${amountNoteFields(TRANSFER_NOTE_PRESETS, 'min="1"')}
       <div class="checkbox-row" id="loan-row" hidden><input type="checkbox" id="useloan"><label for="useloan">Take loan for shortfall</label></div>
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Transfer</button></div>`, m => {
       const amtIn = m.querySelector('#amt');
@@ -1035,7 +1061,7 @@
         }
       };
       m.querySelector('[data-x]').onclick = closeModal;
-      wireNotes(m, 'note');
+      wireNotes(m, 'note', { amountId: 'amt', amountByNote: TRANSFER_NOTE_AMOUNTS });
       m.querySelector('[data-ok]').onclick = () => {
         const a = parseAmt(amtIn.value);
         const to = m.querySelector('#to').value;
@@ -1182,9 +1208,9 @@
 
   function actionJackpotContrib(fromPlayer) {
     openModal(`<h3>Pay Jackpot/Charity — ${esc(playerName(fromPlayer))}</h3>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', PAY_JACKPOT_NOTE_PRESETS)}
+      ${amountNoteFields(PAY_JACKPOT_NOTE_PRESETS, 'min="1"')}
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Pay</button></div>`, m => {
-      wireNotes(m, 'note');
+      wireNotes(m, 'note', { amountId: 'amt', amountByNote: PAY_JACKPOT_NOTE_AMOUNTS });
       m.querySelector('[data-x]').onclick = closeModal;
       m.querySelector('[data-ok]').onclick = () => {
         const a = parseAmt(m.querySelector('#amt').value);
@@ -1232,7 +1258,7 @@
     const entrantRows = state.players.map(p => {
       const canAfford = p.cash >= LOTTERY_PLAYER_AMOUNT;
       return `<div class="lottery-entrant">
-        <input type="checkbox" class="lot-enter" id="ent-${p.id}" ${canAfford ? '' : 'disabled'}>
+        <input type="checkbox" class="lot-enter" id="ent-${p.id}" ${canAfford ? 'checked' : 'disabled'}>
         <label for="ent-${p.id}">${esc(p.name)}${canAfford ? '' : ' (cannot afford $100)'}</label>
       </div>`;
     }).join('');
@@ -1324,25 +1350,6 @@
             else { closeAllModals(); confetti(); playSound('win'); }
           }
         });
-      };
-    });
-  }
-
-  function actionJackpotEdit() {
-    openModal(`<h3>Edit Jackpot</h3><p>Current: ${money(state.jackpot)}</p>
-      <div class="form-group"><label>New Amount</label><input type="number" id="amt" min="0" value="${state.jackpot}"></div>
-      <div class="form-group"><label>Reason</label><input id="reason"></div>
-      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Save</button></div>`, m => {
-      m.querySelector('[data-x]').onclick = closeModal;
-      m.querySelector('[data-ok]').onclick = () => {
-        const a = parseFloat(m.querySelector('#amt').value);
-        const reason = m.querySelector('#reason').value.trim();
-        if (!isFinite(a) || a < 0 || !reason) { modalErr(m, 'Valid amount and reason required'); return; }
-        const snap = captureSnapshot(state.players.map(p => p.id));
-        const diff = a - state.jackpot;
-        state.jackpot = a;
-        logTxn('manual_adjustment', Math.abs(diff), 'jackpot', 'jackpot', reason, snap);
-        save(); render(); closeModal();
       };
     });
   }
@@ -1720,11 +1727,11 @@
     $('#banker-quick').onclick = e => {
       const b = e.target.closest('[data-bk]');
       if (!b) return;
-      if (b.dataset.bk === 'recv') openModal(`<h3>Bank Pay Player</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+      if (b.dataset.bk === 'recv') openModal(`<h3>Bank Pay Player</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
         wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
         m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount required');return;} doTxn('bank_payment',a,'bank',pid,m.querySelector('#note').value.trim(),()=>{mutateBankPayment(pid,a);return{ok:true};}); closeModal(); };
       });
-      if (b.dataset.bk === 'dep') openModal(`<h3>Player Pay Bank</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+      if (b.dataset.bk === 'dep') openModal(`<h3>Player Pay Bank</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
         wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
         m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; const p=getPlayer(pid); if(!a){modalErr(m,'Amount required');return;} if(p.cash<a){modalErr(m,'Insufficient cash');return;} doTxn('bank_deposit',a,pid,'bank',m.querySelector('#note').value.trim(),()=>{mutateBankDeposit(pid,a);return{ok:true};}); closeModal(); };
       });
@@ -2006,10 +2013,10 @@
     document.querySelector('.jackpot-actions').onclick = e => {
       const b = e.target.closest('[data-action]');
       if (!b) return;
-      ({ 'jackpot-contrib-player': () => openModal(`<h3>Player Contribute</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Go</button></div>`, m => {
-        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
+      ({ 'jackpot-contrib-player': () => openModal(`<h3>Player Contribute</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(PAY_JACKPOT_NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Go</button></div>`, m => {
+        wireNotes(m, 'note', { amountId: 'amt', amountByNote: PAY_JACKPOT_NOTE_AMOUNTS }); m.querySelector('[data-x]').onclick=closeModal;
         m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount');return;} const r=doTxn('jackpot_contribution',a,pid,'jackpot',m.querySelector('#note').value.trim(),()=>mutateJackpotContrib(pid,a)); if(r.ok===false)modalErr(m,r.err);else closeModal(); };
-      }), 'jackpot-six': actionJackpotRollSix, 'lottery': actionLottery, 'jackpot-edit': actionJackpotEdit })[b.dataset.action]?.();
+      }), 'jackpot-six': actionJackpotRollSix, 'lottery': actionLottery })[b.dataset.action]?.();
     };
 
     document.onkeydown = e => { if (e.key === 'Escape') closeModal(); };
