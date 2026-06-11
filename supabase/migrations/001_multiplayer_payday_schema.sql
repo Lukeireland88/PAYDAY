@@ -1,2 +1,0 @@
--- Payday multiplayer schema (applied via Supabase MCP)
--- See project migration: multiplayer_payday_schema
