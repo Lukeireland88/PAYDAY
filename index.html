@@ -135,6 +135,16 @@
     .btn-sm { min-height: 44px; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
     .btn-block { width: 100%; }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-labeled { flex-direction: row; gap: 0.35rem; line-height: 1.2; }
+    .btn-icon { font-size: 1.05rem; line-height: 1; flex-shrink: 0; }
+    .btn-text { line-height: 1.15; }
+    .player-actions .btn-labeled {
+      flex-direction: column; gap: 0.2rem; padding: 0.45rem 0.3rem;
+    }
+    .player-actions .btn-labeled .btn-icon { font-size: 1.2rem; }
+    .player-actions .btn-labeled .btn-text { font-size: 0.72rem; }
+    .player-actions .btn-payday .btn-icon { font-size: 1.35rem; }
+    .player-actions .btn-payday .btn-text { font-size: 0.82rem; font-weight: 800; }
 
     /* Forms */
     .form-group { margin-bottom: 0.85rem; }
@@ -423,9 +433,9 @@
       <div class="header-details">
         <p class="subtitle">Digital banker for your board game</p>
         <div class="header-row">
-          <button type="button" id="btn-theme" class="btn btn-sm" title="Toggle theme">🌓 Theme</button>
-          <button type="button" id="btn-sound" class="btn btn-sm" title="Toggle sounds">🔇 Sound</button>
-          <button type="button" id="btn-awake" class="btn btn-sm" title="Keep screen on while app is open" hidden>☀️ Stay Awake</button>
+          <button type="button" id="btn-theme" class="btn btn-sm btn-labeled" title="Toggle theme"><span class="btn-icon" aria-hidden="true">🌓</span><span class="btn-text">Theme</span></button>
+          <button type="button" id="btn-sound" class="btn btn-sm btn-labeled" title="Toggle sounds"><span class="btn-icon" aria-hidden="true">🔇</span><span class="btn-text">Sound</span></button>
+          <button type="button" id="btn-awake" class="btn btn-sm btn-labeled" title="Keep screen on while app is open" hidden><span class="btn-icon" aria-hidden="true">☀️</span><span class="btn-text">Stay Awake</span></button>
         </div>
       </div>
     </header>
@@ -451,8 +461,8 @@
           <label class="setup-check"><input type="checkbox" id="setup-enforce-increments" checked> Enforce official repayment increments</label>
         </div>
         <p id="setup-error" class="error-msg"></p>
-        <button type="button" id="btn-start" class="btn btn-primary btn-block">Start Game</button>
-        <button type="button" id="btn-import" class="btn btn-block" style="margin-top:0.5rem">Import Saved Game (JSON)</button>
+        <button type="button" id="btn-start" class="btn btn-primary btn-block btn-labeled"><span class="btn-icon" aria-hidden="true">▶️</span><span class="btn-text">Start Game</span></button>
+        <button type="button" id="btn-import" class="btn btn-block btn-labeled" style="margin-top:0.5rem"><span class="btn-icon" aria-hidden="true">📂</span><span class="btn-text">Import Saved Game</span></button>
         <input type="file" id="import-file" accept=".json" hidden>
       </div>
     </section>
@@ -464,15 +474,15 @@
         <div class="jackpot-bar">
           <div><div style="font-size:0.8rem;opacity:0.9">JACKPOT</div><div class="amount" id="jackpot-amount">$0</div></div>
           <div class="jackpot-actions">
-            <button type="button" class="btn btn-sm" data-action="jackpot-contrib-player">Player Contribute</button>
-            <button type="button" class="btn btn-sm btn-jackpot-six" data-action="jackpot-six">Rolled a 6!</button>
-            <button type="button" class="btn btn-sm btn-lottery" data-action="lottery">Run Lottery</button>
-            <button type="button" class="btn btn-sm" data-action="jackpot-edit">Edit Jackpot</button>
+            <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-contrib-player"><span class="btn-icon" aria-hidden="true">➕</span><span class="btn-text">Contribute</span></button>
+            <button type="button" class="btn btn-sm btn-labeled btn-jackpot-six" data-action="jackpot-six"><span class="btn-icon" aria-hidden="true">🎲</span><span class="btn-text">Rolled a 6!</span></button>
+            <button type="button" class="btn btn-sm btn-labeled btn-lottery" data-action="lottery"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Lottery</span></button>
+            <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-edit"><span class="btn-icon" aria-hidden="true">✏️</span><span class="btn-text">Edit Pool</span></button>
           </div>
         </div>
         <div class="player-board-header">
           <p class="player-board-hint" id="player-board-hint">Select a player, then choose an action.</p>
-          <button type="button" id="btn-layout-mode" class="btn btn-sm" title="Switch player board layout">📋 Classic layout</button>
+          <button type="button" id="btn-layout-mode" class="btn btn-sm btn-labeled" title="Switch player board layout"><span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span></button>
         </div>
         <div class="player-grid" id="player-grid"></div>
       </div>
@@ -494,13 +504,13 @@
             <select id="history-filter-type"><option value="">All Types</option></select>
           </div>
           <div class="toolbar">
-            <button type="button" id="btn-undo" class="btn btn-sm">Undo Last</button>
-            <button type="button" id="btn-undo-multi" class="btn btn-sm">Undo Multiple</button>
-            <button type="button" id="btn-clear-history" class="btn btn-sm btn-danger">Clear History</button>
-            <button type="button" id="btn-export-txn" class="btn btn-sm">Export CSV</button>
-            <button type="button" id="btn-export-balances" class="btn btn-sm">Export Balances</button>
-            <button type="button" id="btn-print" class="btn btn-sm">Print Summary</button>
-            <button type="button" id="btn-export-json" class="btn btn-sm">Backup JSON</button>
+            <button type="button" id="btn-undo" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">↩️</span><span class="btn-text">Undo Last</span></button>
+            <button type="button" id="btn-undo-multi" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">⏪</span><span class="btn-text">Undo Multiple</span></button>
+            <button type="button" id="btn-clear-history" class="btn btn-sm btn-labeled btn-danger"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Clear History</span></button>
+            <button type="button" id="btn-export-txn" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">📄</span><span class="btn-text">Export CSV</span></button>
+            <button type="button" id="btn-export-balances" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">💰</span><span class="btn-text">Balances</span></button>
+            <button type="button" id="btn-print" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">🖨️</span><span class="btn-text">Print</span></button>
+            <button type="button" id="btn-export-json" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">💾</span><span class="btn-text">Backup</span></button>
           </div>
           <div class="history-list" id="history-list"></div>
         </div>
@@ -514,14 +524,14 @@
         <div class="panel">
           <h2>Leaderboard</h2>
           <ul class="leaderboard-list" id="leaderboard-list"></ul>
-          <button type="button" id="btn-winner" class="btn btn-accent btn-block" style="margin-top:1rem">End Game — Show Winner</button>
+          <button type="button" id="btn-winner" class="btn btn-accent btn-block btn-labeled" style="margin-top:1rem"><span class="btn-icon" aria-hidden="true">🏆</span><span class="btn-text">End Game — Show Winner</span></button>
         </div>
       </div>
 
       <div class="toolbar">
-        <button type="button" id="btn-new-game" class="btn btn-sm">New Game</button>
-        <button type="button" id="btn-reset" class="btn btn-sm btn-danger">Reset Game</button>
-        <button type="button" id="btn-clear-save" class="btn btn-sm">Clear Saved Data</button>
+        <button type="button" id="btn-new-game" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">🆕</span><span class="btn-text">New Game</span></button>
+        <button type="button" id="btn-reset" class="btn btn-sm btn-labeled btn-danger"><span class="btn-icon" aria-hidden="true">🔄</span><span class="btn-text">Reset Game</span></button>
+        <button type="button" id="btn-clear-save" class="btn btn-sm btn-labeled"><span class="btn-icon" aria-hidden="true">🗑️</span><span class="btn-text">Clear Save</span></button>
       </div>
 
       <nav class="bottom-nav" id="bottom-nav">
@@ -600,6 +610,10 @@
   }
 
   function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function iconBtn(icon, text, className = 'btn btn-labeled', attrs = '') {
+    return `<button type="button" class="${className}" ${attrs}><span class="btn-icon" aria-hidden="true">${icon}</span><span class="btn-text">${text}</span></button>`;
+  }
 
   function editionRules() {
     return { loanRate: 0.10, repayInc: 1000 };
@@ -1323,8 +1337,8 @@
   function actionManageBills(playerId) {
     const p = getPlayer(playerId);
     const list = p.bills.map(b => `<div class="bill-item"><span>${esc(b.description)} — ${money(b.amount)}</span>
-      <span><button type="button" class="btn btn-sm" data-pay="${b.id}">Pay</button>
-      <button type="button" class="btn btn-sm btn-danger" data-rm="${b.id}">Remove</button></span></div>`).join('') || '<p>No bills.</p>';
+      <span>${iconBtn('💳', 'Pay', 'btn btn-sm btn-labeled', `data-pay="${b.id}"`)}
+      ${iconBtn('🗑️', 'Remove', 'btn btn-sm btn-labeled btn-danger', `data-rm="${b.id}"`)}</span></div>`).join('') || '<p>No bills.</p>';
     openModal(`<h3>Bills — ${esc(p.name)}</h3><div class="bill-list">${list}</div>
       <div class="modal-actions"><button type="button" class="btn btn-block" data-x>Close</button></div>`, m => {
       m.querySelector('[data-x]').onclick = closeModal;
@@ -1474,16 +1488,18 @@
   }
 
   function playerActionsHtml(playerId) {
+    const act = (icon, text, action, extra = '') =>
+      iconBtn(icon, text, `btn btn-labeled ${extra}`.trim(), `data-a="${action}" data-p="${playerId}"`);
     return `<div class="player-actions">
-      <button type="button" class="btn" data-a="recv" data-p="${playerId}">Receive</button>
-      <button type="button" class="btn" data-a="pay" data-p="${playerId}">Pay</button>
-      <button type="button" class="btn" data-a="xfer" data-p="${playerId}">Transfer</button>
-      <button type="button" class="btn" data-a="loan" data-p="${playerId}">Loan</button>
-      <button type="button" class="btn" data-a="bill" data-p="${playerId}">Add Bill</button>
-      <button type="button" class="btn" data-a="bills" data-p="${playerId}">View Bills</button>
-      <button type="button" class="btn" data-a="jackpot" data-p="${playerId}">Jackpot</button>
-      <button type="button" class="btn" data-a="edit" data-p="${playerId}">Edit</button>
-      <button type="button" class="btn btn-payday" data-a="payday" data-p="${playerId}">PAYDAY</button>
+      ${act('💵', 'Receive', 'recv')}
+      ${act('💳', 'Pay', 'pay')}
+      ${act('🔁', 'Transfer', 'xfer')}
+      ${act('🏦', 'Loan', 'loan')}
+      ${act('🧾', 'Add Bill', 'bill')}
+      ${act('📋', 'Bills', 'bills')}
+      ${act('🎰', 'Jackpot', 'jackpot')}
+      ${act('✏️', 'Edit', 'edit')}
+      ${act('📅', 'PAYDAY', 'payday', 'btn-payday')}
     </div>`;
   }
 
@@ -1528,14 +1544,14 @@
     if (!hint || !btn) return;
     if (isClassicLayout()) {
       hint.textContent = 'All players shown with actions on each card.';
-      btn.textContent = '🎯 Focus mode';
+      btn.innerHTML = '<span class="btn-icon" aria-hidden="true">🎯</span><span class="btn-text">Focus mode</span>';
       btn.title = 'Select a player, then show actions';
     } else {
       const selected = getPlayer(state.selectedPlayerId);
       hint.textContent = selected
         ? `Banking for ${selected.name}. Tap another player to switch.`
         : 'Select a player, then choose an action.';
-      btn.textContent = '📋 Classic layout';
+      btn.innerHTML = '<span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span>';
       btn.title = 'Show all players with actions on each card';
     }
   }
@@ -1594,10 +1610,10 @@
 
   function renderBanker() {
     $('#banker-quick').innerHTML = `
-      <button type="button" class="btn btn-sm" data-bk="recv">Bank Pay Player</button>
-      <button type="button" class="btn btn-sm" data-bk="dep">Player Pay Bank</button>
-      <button type="button" class="btn btn-sm btn-jackpot-six" data-bk="jackpot-six">Rolled a 6!</button>
-      <button type="button" class="btn btn-sm btn-lottery" data-bk="lottery">Run Lottery</button>`;
+      ${iconBtn('💵', 'Pay Player', 'btn btn-sm btn-labeled', 'data-bk="recv"')}
+      ${iconBtn('💳', 'Player Pays', 'btn btn-sm btn-labeled', 'data-bk="dep"')}
+      ${iconBtn('🎲', 'Rolled a 6!', 'btn btn-sm btn-labeled btn-jackpot-six', 'data-bk="jackpot-six"')}
+      ${iconBtn('🎰', 'Lottery', 'btn btn-sm btn-labeled btn-lottery', 'data-bk="lottery"')}`;
     $('#banker-quick').onclick = e => {
       const b = e.target.closest('[data-bk]');
       if (!b) return;
@@ -1706,7 +1722,9 @@
     btn.hidden = !supported;
     if (!supported) return;
     const on = state.keepAwake !== false;
-    btn.textContent = on ? '☀️ Stay Awake' : '🌙 Allow Sleep';
+    btn.innerHTML = on
+      ? '<span class="btn-icon" aria-hidden="true">☀️</span><span class="btn-text">Stay Awake</span>'
+      : '<span class="btn-icon" aria-hidden="true">🌙</span><span class="btn-text">Allow Sleep</span>';
     btn.title = on ? 'Screen stays on while app is open' : 'Screen may dim normally';
   }
 
@@ -1799,7 +1817,7 @@
     const body = leaders.length === 1
       ? `<h2>🎉 Winner!</h2><p style="font-size:1.5rem;font-weight:800">${esc(leaders[0].name)}</p><p>Net worth: ${money(netWorth(leaders[0]))}</p>`
       : `<h2>🤝 It's a Tie!</h2><p style="font-size:1.25rem;font-weight:800">${esc(leaders.map(p => p.name).join(', '))}</p><p>Net worth: ${money(netWorth(leaders[0]))}</p>`;
-    ov.innerHTML = `<div class="winner-card">${body}<button type="button" class="btn btn-primary btn-block" style="margin-top:1rem">Close</button></div>`;
+    ov.innerHTML = `<div class="winner-card">${body}${iconBtn('✖️', 'Close', 'btn btn-primary btn-block btn-labeled', 'style="margin-top:1rem"')}</div>`;
     ov.querySelector('button').onclick = () => ov.remove();
     document.body.appendChild(ov);
     confetti(); playSound('win');
@@ -1814,7 +1832,12 @@
       renderHeader();
     };
     $('#btn-theme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
-    $('#btn-sound').onclick = () => { soundsOn = !soundsOn; $('#btn-sound').textContent = soundsOn ? '🔊 Sound' : '🔇 Sound'; };
+    $('#btn-sound').onclick = () => {
+      soundsOn = !soundsOn;
+      $('#btn-sound').innerHTML = soundsOn
+        ? '<span class="btn-icon" aria-hidden="true">🔊</span><span class="btn-text">Sound</span>'
+        : '<span class="btn-icon" aria-hidden="true">🔇</span><span class="btn-text">Sound</span>';
+    };
     $('#btn-awake').onclick = () => {
       state.keepAwake = state.keepAwake === false;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
