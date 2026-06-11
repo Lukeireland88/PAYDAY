@@ -168,10 +168,18 @@
     .player-setup-row { display: grid; grid-template-columns: 1fr 100px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: end; }
     .player-setup-row label { font-size: 0.8rem; font-weight: 600; }
 
+    .panel-toggle.is-active {
+      border-color: var(--primary);
+      background: rgba(26, 107, 60, 0.1);
+    }
+    [data-theme="dark"] .panel-toggle.is-active { background: rgba(74, 222, 128, 0.12); }
+    .collapsible-panel { margin-bottom: 1rem; }
+    .collapsible-panel[hidden] { display: none !important; }
+
     /* Summary */
     .summary-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 0.5rem; margin-bottom: 1rem;
+      gap: 0.5rem;
     }
     .summary-item {
       background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
@@ -216,11 +224,7 @@
     .lottery-prize { font-size: 1.5rem; font-weight: 800; color: var(--jackpot); text-align: center; margin: 0.75rem 0; }
 
     /* Player board */
-    .player-board-header {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-      gap: 0.5rem; margin-bottom: 0.75rem;
-    }
-    .player-board-hint { font-size: 0.85rem; color: var(--text-muted); flex: 1; min-width: 12rem; }
+    .player-board-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
     .player-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
     @media (min-width: 600px) { .player-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 960px) { .player-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -436,6 +440,9 @@
           <button type="button" id="btn-theme" class="btn btn-sm btn-labeled" title="Toggle theme"><span class="btn-icon" aria-hidden="true">🌓</span><span class="btn-text">Theme</span></button>
           <button type="button" id="btn-sound" class="btn btn-sm btn-labeled" title="Toggle sounds"><span class="btn-icon" aria-hidden="true">🔇</span><span class="btn-text">Sound</span></button>
           <button type="button" id="btn-awake" class="btn btn-sm btn-labeled" title="Keep screen on while app is open" hidden><span class="btn-icon" aria-hidden="true">☀️</span><span class="btn-text">Stay Awake</span></button>
+          <button type="button" id="btn-toggle-summary" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide game summary"><span class="btn-icon" aria-hidden="true">📊</span><span class="btn-text">Summary</span></button>
+          <button type="button" id="btn-toggle-jackpot" class="btn btn-sm btn-labeled panel-toggle" hidden aria-expanded="false" title="Show or hide jackpot panel"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Jackpot</span></button>
+          <button type="button" id="btn-layout-mode" class="btn btn-sm btn-labeled panel-toggle" hidden title="Switch player board layout"><span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span></button>
         </div>
       </div>
     </header>
@@ -470,20 +477,21 @@
     <!-- GAME VIEWS (hidden until started) -->
     <div id="view-game" hidden>
       <div id="tab-game">
-        <div class="summary-grid" id="summary-grid"></div>
-        <div class="jackpot-bar">
-          <div><div style="font-size:0.8rem;opacity:0.9">JACKPOT</div><div class="amount" id="jackpot-amount">$0</div></div>
-          <div class="jackpot-actions">
-            <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-contrib-player"><span class="btn-icon" aria-hidden="true">➕</span><span class="btn-text">Contribute</span></button>
-            <button type="button" class="btn btn-sm btn-labeled btn-jackpot-six" data-action="jackpot-six"><span class="btn-icon" aria-hidden="true">🎲</span><span class="btn-text">Rolled a 6!</span></button>
-            <button type="button" class="btn btn-sm btn-labeled btn-lottery" data-action="lottery"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Lottery</span></button>
-            <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-edit"><span class="btn-icon" aria-hidden="true">✏️</span><span class="btn-text">Edit Pool</span></button>
+        <div id="summary-panel" class="collapsible-panel" hidden>
+          <div class="summary-grid" id="summary-grid"></div>
+        </div>
+        <div id="jackpot-panel" class="collapsible-panel" hidden>
+          <div class="jackpot-bar">
+            <div><div style="font-size:0.8rem;opacity:0.9">JACKPOT</div><div class="amount" id="jackpot-amount">$0</div></div>
+            <div class="jackpot-actions">
+              <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-contrib-player"><span class="btn-icon" aria-hidden="true">➕</span><span class="btn-text">Contribute</span></button>
+              <button type="button" class="btn btn-sm btn-labeled btn-jackpot-six" data-action="jackpot-six"><span class="btn-icon" aria-hidden="true">🎲</span><span class="btn-text">Rolled a 6!</span></button>
+              <button type="button" class="btn btn-sm btn-labeled btn-lottery" data-action="lottery"><span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Lottery</span></button>
+              <button type="button" class="btn btn-sm btn-labeled" data-action="jackpot-edit"><span class="btn-icon" aria-hidden="true">✏️</span><span class="btn-text">Edit Pool</span></button>
+            </div>
           </div>
         </div>
-        <div class="player-board-header">
-          <p class="player-board-hint" id="player-board-hint">Select a player, then choose an action.</p>
-          <button type="button" id="btn-layout-mode" class="btn btn-sm btn-labeled" title="Switch player board layout"><span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span></button>
-        </div>
+        <p class="player-board-hint" id="player-board-hint">Select a player, then choose an action.</p>
         <div class="player-grid" id="player-grid"></div>
       </div>
 
@@ -584,6 +592,8 @@
       keepAwake: true,
       playerLayout: 'focus',
       selectedPlayerId: null,
+      summaryOpen: undefined,
+      jackpotOpen: undefined,
       peakBalances: {}
     };
   }
@@ -1432,6 +1442,48 @@
     $('#setup-enforce-increments').checked = state.enforceIncrements !== false;
   }
 
+  function isMobileView() {
+    return window.matchMedia('(max-width: 599px)').matches;
+  }
+
+  function initPanelDefaults() {
+    if (state.summaryOpen === undefined) state.summaryOpen = !isMobileView();
+    if (state.jackpotOpen === undefined) state.jackpotOpen = !isMobileView();
+  }
+
+  function persistStateQuiet() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
+  }
+
+  function renderGamePanels() {
+    initPanelDefaults();
+    const summaryPanel = $('#summary-panel');
+    const jackpotPanel = $('#jackpot-panel');
+    const sumBtn = $('#btn-toggle-summary');
+    const jackBtn = $('#btn-toggle-jackpot');
+    if (!summaryPanel || !jackpotPanel) return;
+
+    summaryPanel.hidden = !state.summaryOpen;
+    jackpotPanel.hidden = !state.jackpotOpen;
+
+    const showToggles = state.gameStarted;
+    if (sumBtn) {
+      sumBtn.hidden = !showToggles;
+      sumBtn.classList.toggle('is-active', state.summaryOpen);
+      sumBtn.setAttribute('aria-expanded', String(state.summaryOpen));
+      sumBtn.title = state.summaryOpen ? 'Hide game summary' : 'Show game summary';
+    }
+    if (jackBtn) {
+      jackBtn.hidden = !showToggles;
+      jackBtn.classList.toggle('is-active', state.jackpotOpen);
+      jackBtn.setAttribute('aria-expanded', state.jackpotOpen);
+      const label = state.jackpotOpen ? 'Jackpot' : `Jackpot · ${money(state.jackpot)}`;
+      const text = jackBtn.querySelector('.btn-text');
+      if (text) text.textContent = label;
+      jackBtn.title = state.jackpotOpen ? 'Hide jackpot panel' : 'Show jackpot panel';
+    }
+  }
+
   function renderSummary() {
     const totalLoans = state.players.reduce((s, p) => s + p.loan, 0);
     const totalBills = state.players.reduce((s, p) => s + billsTotal(p), 0);
@@ -1445,6 +1497,7 @@
     $('#summary-grid').innerHTML = items.map(i => `<div class="summary-item"><div class="label">${i.label}</div><div class="value ${i.cls}">${esc(i.val)}</div></div>`).join('');
     $('#jackpot-amount').textContent = money(state.jackpot);
     $('#btn-undo').disabled = !state.transactions.length;
+    renderGamePanels();
   }
 
   function isClassicLayout() {
@@ -1541,18 +1594,27 @@
   function renderPlayerBoardHint() {
     const hint = $('#player-board-hint');
     const btn = $('#btn-layout-mode');
-    if (!hint || !btn) return;
+    if (btn) {
+      btn.hidden = !state.gameStarted;
+      if (isClassicLayout()) {
+        btn.classList.add('is-active');
+        btn.innerHTML = '<span class="btn-icon" aria-hidden="true">🎯</span><span class="btn-text">Focus mode</span>';
+        btn.title = 'Switch to focus mode — select a player, then show actions';
+      } else {
+        btn.classList.remove('is-active');
+        btn.innerHTML = '<span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span>';
+        btn.title = 'Switch to classic layout — all players with actions on each card';
+      }
+    }
+    if (!hint) return;
+    if (!state.gameStarted) return;
     if (isClassicLayout()) {
       hint.textContent = 'All players shown with actions on each card.';
-      btn.innerHTML = '<span class="btn-icon" aria-hidden="true">🎯</span><span class="btn-text">Focus mode</span>';
-      btn.title = 'Select a player, then show actions';
     } else {
       const selected = getPlayer(state.selectedPlayerId);
       hint.textContent = selected
         ? `Banking for ${selected.name}. Tap another player to switch.`
         : 'Select a player, then choose an action.';
-      btn.innerHTML = '<span class="btn-icon" aria-hidden="true">📋</span><span class="btn-text">Classic layout</span>';
-      btn.title = 'Show all players with actions on each card';
     }
   }
 
@@ -1737,6 +1799,8 @@
     toggle.title = collapsed ? 'Expand header' : 'Collapse header';
     toggle.setAttribute('aria-expanded', String(!collapsed));
     renderWakeLockButton();
+    renderGamePanels();
+    renderPlayerBoardHint();
   }
 
   function render() {
@@ -1869,6 +1933,18 @@
     $('#history-filter-player').onchange = renderHistory;
     $('#history-filter-type').onchange = renderHistory;
 
+    $('#btn-toggle-summary').onclick = () => {
+      initPanelDefaults();
+      state.summaryOpen = !state.summaryOpen;
+      persistStateQuiet();
+      renderGamePanels();
+    };
+    $('#btn-toggle-jackpot').onclick = () => {
+      initPanelDefaults();
+      state.jackpotOpen = !state.jackpotOpen;
+      persistStateQuiet();
+      renderGamePanels();
+    };
     $('#btn-layout-mode').onclick = () => {
       state.playerLayout = isClassicLayout() ? 'focus' : 'classic';
       save();

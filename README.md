@@ -18,8 +18,9 @@ To resume later, open the same file in the same browser — your game is stored 
 ## Features
 
 ### Game tab
-- **Summary bar** — loans, jackpot, unpaid bills, leader, and most debt (ties shown correctly).
-- **Player board (Focus mode)** — tap a player in the roster, then use actions for that player only (reduces mis-taps on shared devices). Switch to **Classic layout** for all cards with actions visible at once.
+- **Summary bar** — loans, jackpot, unpaid bills, leader, and most debt (ties shown correctly). Toggle from the header — hidden by default on phones.
+- **Jackpot panel** — pool total and quick actions; toggle from the header (hidden by default on phones).
+- **Player board (Focus mode)** — tap a player in the roster, then use actions for that player only (reduces mis-taps on shared devices). Switch to **Classic layout** from the header for all cards with actions visible at once.
 - **Jackpot bar** — current pool plus quick actions for contributions, lottery, and jackpot wins.
 
 ### Per-player actions
@@ -99,6 +100,7 @@ Optional setup checkbox: **Enforce official repayment increments** (validates lo
 - **Theme** — light / dark toggle
 - **Sound** — optional transaction sounds (off by default)
 - **Stay Awake** — keeps the screen on while the app is open (on by default; requires a supported browser)
+- **Summary / Jackpot / Layout** — game panel toggles in the expanded header (visible during play)
 - **Focus / Classic layout** — Focus mode (default) shows a read-only roster plus one action panel; Classic shows every player card with buttons
 - **New Game** — wipe progress and return to setup
 - **Reset Game** — reset balances and jackpot, keep player names
