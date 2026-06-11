@@ -98,6 +98,7 @@ Optional setup checkbox: **Enforce official repayment increments** (validates lo
 
 - **Theme** — light / dark toggle
 - **Sound** — optional transaction sounds (off by default)
+- **Stay Awake** — keeps the screen on while the app is open (on by default; requires a supported browser)
 - **New Game** — wipe progress and return to setup
 - **Reset Game** — reset balances and jackpot, keep player names
 - **Clear Saved Data** — remove all `localStorage` data

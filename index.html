@@ -392,6 +392,7 @@
         <div class="header-row">
           <button type="button" id="btn-theme" class="btn btn-sm" title="Toggle theme">🌓 Theme</button>
           <button type="button" id="btn-sound" class="btn btn-sm" title="Toggle sounds">🔇 Sound</button>
+          <button type="button" id="btn-awake" class="btn btn-sm" title="Keep screen on while app is open" hidden>☀️ Stay Awake</button>
         </div>
       </div>
     </header>
@@ -521,6 +522,7 @@
   let activeModal = null;
   let soundsOn = false;
   let saveFlashTimer = null;
+  let wakeLock = null;
 
   function defaultState() {
     return {
@@ -532,6 +534,7 @@
       transactions: [],
       theme: 'light',
       headerCollapsed: true,
+      keepAwake: true,
       peakBalances: {}
     };
   }
@@ -1539,6 +1542,44 @@
     }).join('');
   }
 
+  function wakeLockSupported() {
+    return 'wakeLock' in navigator;
+  }
+
+  async function releaseWakeLock() {
+    if (!wakeLock) return;
+    try { await wakeLock.release(); } catch (e) { /* ignore */ }
+    wakeLock = null;
+  }
+
+  async function updateWakeLock() {
+    if (!wakeLockSupported()) return;
+    const want = state.keepAwake !== false && document.visibilityState === 'visible';
+    if (!want) {
+      await releaseWakeLock();
+      return;
+    }
+    if (wakeLock) return;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => {
+        wakeLock = null;
+        if (state.keepAwake !== false && document.visibilityState === 'visible') updateWakeLock();
+      });
+    } catch (e) { /* unsupported, denied, or low battery */ }
+  }
+
+  function renderWakeLockButton() {
+    const btn = $('#btn-awake');
+    if (!btn) return;
+    const supported = wakeLockSupported();
+    btn.hidden = !supported;
+    if (!supported) return;
+    const on = state.keepAwake !== false;
+    btn.textContent = on ? '☀️ Stay Awake' : '🌙 Allow Sleep';
+    btn.title = on ? 'Screen stays on while app is open' : 'Screen may dim normally';
+  }
+
   function renderHeader() {
     const collapsed = state.headerCollapsed !== false;
     const header = $('#app-header');
@@ -1547,6 +1588,7 @@
     toggle.textContent = collapsed ? '▼' : '▲';
     toggle.title = collapsed ? 'Expand header' : 'Collapse header';
     toggle.setAttribute('aria-expanded', String(!collapsed));
+    renderWakeLockButton();
   }
 
   function render() {
@@ -1556,6 +1598,7 @@
       $('#view-setup').hidden = false;
       $('#view-game').hidden = true;
       renderSetup();
+      updateWakeLock();
       return;
     }
     $('#view-setup').hidden = true;
@@ -1566,6 +1609,7 @@
     renderBanker();
     renderStats();
     renderLeaderboard();
+    updateWakeLock();
   }
 
   function switchTab(tab) {
@@ -1640,6 +1684,14 @@
     };
     $('#btn-theme').onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; save(); render(); };
     $('#btn-sound').onclick = () => { soundsOn = !soundsOn; $('#btn-sound').textContent = soundsOn ? '🔊 Sound' : '🔇 Sound'; };
+    $('#btn-awake').onclick = () => {
+      state.keepAwake = state.keepAwake === false;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
+      renderWakeLockButton();
+      updateWakeLock();
+    };
+    document.addEventListener('visibilitychange', () => updateWakeLock());
+    document.addEventListener('pointerdown', () => updateWakeLock(), { passive: true });
     $('#btn-new-game').onclick = () => { if (confirm('Start new game? Current progress will be lost.')) { state = defaultState(); save(); render(); } };
     $('#btn-reset').onclick = () => { if (confirm('Reset game?')) { state.players.forEach(p => { p.cash = state.startingBalance; p.loan = 0; p.bills = []; p.paydayCount = 0; }); state.jackpot = 0; state.transactions = []; save(); render(); } };
     $('#btn-clear-save').onclick = () => { if (confirm('Clear all saved data?')) { localStorage.removeItem(STORAGE_KEY); state = defaultState(); render(); } };
