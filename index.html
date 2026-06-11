@@ -285,23 +285,6 @@
     .player-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.75rem; }
     .player-actions .btn { font-size: 0.8rem; min-height: 48px; padding: 0.5rem; }
     .player-actions .btn-payday { grid-column: 1 / -1; background: var(--accent); color: #fff; border-color: #9f1239; font-size: 0.9rem; }
-    .btn-split {
-      display: flex; grid-column: 1 / -1; min-height: 48px;
-      border: 2px solid var(--border); border-radius: var(--radius); overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-    .btn-split .btn-split-part {
-      flex: 1; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 0.15rem; padding: 0.4rem 0.25rem; min-height: 48px; border: none; border-radius: 0;
-      background: var(--surface-alt); color: var(--text); font-family: inherit; font-weight: 600;
-      cursor: pointer; touch-action: manipulation;
-    }
-    .btn-split .btn-split-part + .btn-split-part { border-left: 2px solid var(--border); }
-    .btn-split .btn-split-part:active { transform: scale(0.98); background: var(--surface); }
-    .btn-split .btn-split-part .btn-icon { font-size: 1.1rem; line-height: 1; }
-    .btn-split .btn-split-part .btn-text { font-size: 0.68rem; line-height: 1.15; text-align: center; }
-    .btn-split .btn-split-jackpot { background: rgba(109, 40, 217, 0.1); }
-    .btn-split .btn-split-jackpot:active { background: rgba(109, 40, 217, 0.18); }
 
     /* Nav */
     .bottom-nav {
@@ -1603,27 +1586,17 @@
       <div class="player-meta">Net: ${money(nw)} · Salary: ${money(p.salary)} · Paydays: ${p.paydayCount} · Interest: 10%</div>`;
   }
 
-  function paySplitButton(playerId) {
-    return `<div class="btn-split">
-      <button type="button" class="btn-split-part" data-a="pay" data-p="${playerId}">
-        <span class="btn-icon" aria-hidden="true">💳</span><span class="btn-text">Pay Bank</span>
-      </button>
-      <button type="button" class="btn-split-part btn-split-jackpot" data-a="jackpot" data-p="${playerId}">
-        <span class="btn-icon" aria-hidden="true">🎰</span><span class="btn-text">Pay Jackpot</span>
-      </button>
-    </div>`;
-  }
-
   function playerActionsHtml(playerId) {
     const act = (icon, text, action, extra = '') =>
       iconBtn(icon, text, `btn btn-labeled ${extra}`.trim(), `data-a="${action}" data-p="${playerId}"`);
     return `<div class="player-actions">
       ${act('💵', 'Receive', 'recv')}
+      ${act('💳', 'Pay Bank', 'pay')}
       ${act('🔁', 'Transfer', 'xfer')}
-      ${paySplitButton(playerId)}
-      ${act('🏦', 'Loan', 'loan')}
+      ${act('🎰', 'Pay Jackpot', 'jackpot')}
       ${act('🧾', 'Add Bill', 'bill')}
       ${act('📋', 'View Bills', 'bills')}
+      ${act('🏦', 'Loan', 'loan')}
       ${act('✏️', 'Edit', 'edit')}
       ${act('📅', 'PAYDAY', 'payday', 'btn-payday')}
     </div>`;
