@@ -559,6 +559,14 @@
   const LOTTERY_BANK_AMOUNT = 1000;
   const LOTTERY_PLAYER_AMOUNT = 100;
   const NOTE_PRESETS = ['Salary','Bill','Mail','Deal Card','Lottery','Yard Sale','Insurance','Radio Contest','Stock Purchase','Jackpot','Other'];
+  const PAY_JACKPOT_NOTE_PRESETS = [
+    'Car Boot Sale', 'Charity', 'Charity Concert', 'Date Night at the Casino', 'Family Pet',
+    'Food for the Month', 'Fun Fair', 'Online Auction', 'Shopping Spree', 'Super Ski Sunday',
+    'Supermarket', 'Transfer Money', 'Walk for Charity'
+  ];
+  const TRANSFER_NOTE_PRESETS = ['Birthday', 'Mad Money', 'Pay a Neighbour'];
+  const PAY_NOTE_PRESETS = ['Deal', 'Monster Charge', 'Other'];
+  const RECEIVE_NOTE_PRESETS = ['Date Night at the Casino', 'Found a Buyer!', 'Pools', 'Radio Contest', 'Scratchcard'];
   const TXN_LABELS = {
     bank_payment:'Bank Payment', bank_deposit:'Bank Deposit', player_transfer:'Player Transfer',
     loan_taken:'Loan Taken', loan_repaid:'Loan Repaid', loan_interest:'Loan Interest',
@@ -958,8 +966,8 @@
     }
   }
 
-  function noteField(id) {
-    const chips = NOTE_PRESETS.map(n => `<button type="button" class="note-chip" data-n="${esc(n)}">${esc(n)}</button>`).join('');
+  function noteField(id, presets = NOTE_PRESETS) {
+    const chips = presets.map(n => `<button type="button" class="note-chip" data-n="${esc(n)}">${esc(n)}</button>`).join('');
     return `<div class="form-group"><label for="${id}">Note</label><input id="${id}" maxlength="120" placeholder="Optional note"><div class="note-chips">${chips}</div></div>`;
   }
 
@@ -988,7 +996,7 @@
 
   function actionReceive(playerId) {
     const p = getPlayer(playerId);
-    openAmountModal(`Receive Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1" step="1"></div>${noteField('note')}`, m => {
+    openAmountModal(`Receive Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1" step="1"></div>${noteField('note', RECEIVE_NOTE_PRESETS)}`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
       return doTxn('bank_payment', a, 'bank', playerId, m.querySelector('#note').value.trim(), () => { mutateBankPayment(playerId, a); return { ok: true }; });
@@ -997,7 +1005,7 @@
 
   function actionPay(playerId) {
     const p = getPlayer(playerId);
-    openAmountModal(`Pay Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}`, m => {
+    openAmountModal(`Pay Money — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p><div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', PAY_NOTE_PRESETS)}`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
       if (p.cash < a) return { err: 'Insufficient cash' };
@@ -1009,7 +1017,7 @@
     const p = getPlayer(playerId);
     openModal(`<h3>Transfer — ${esc(p.name)}</h3><p>Cash: ${money(p.cash)}</p>
       <div class="form-group"><label>To</label><select id="to">${playerOptions(playerId)}</select></div>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', TRANSFER_NOTE_PRESETS)}
       <div class="checkbox-row" id="loan-row" hidden><input type="checkbox" id="useloan"><label for="useloan">Take loan for shortfall</label></div>
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Transfer</button></div>`, m => {
       const amtIn = m.querySelector('#amt');
@@ -1055,10 +1063,10 @@
     const inc = loanIncrement();
     openAmountModal(`Take Loan — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)} · Loan: ${money(p.loan)}</p>
       <p style="font-size:0.85rem;color:var(--text-muted)">Loans must be in ${money(inc)} increments (minimum ${money(inc)}).</p>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="${inc}" step="${inc}"></div>${noteField('note')}`, m => {
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="${inc}" step="${inc}"></div>`, m => {
       const a = parseAmt(m.querySelector('#amt').value);
       if (!a) return { err: 'Enter valid amount' };
-      return doTxn('loan_taken', a, playerId, 'bank', m.querySelector('#note').value.trim(), () => mutateLoan(playerId, a));
+      return doTxn('loan_taken', a, playerId, 'bank', '', () => mutateLoan(playerId, a));
     });
   }
 
@@ -1173,9 +1181,9 @@
   }
 
   function actionJackpotContrib(fromPlayer) {
-    openModal(`<h3>Contribute to Jackpot — ${esc(playerName(fromPlayer))}</h3>
-      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note')}
-      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Contribute</button></div>`, m => {
+    openModal(`<h3>Pay Jackpot/Charity — ${esc(playerName(fromPlayer))}</h3>
+      <div class="form-group"><label>Amount</label><input type="number" id="amt" min="1"></div>${noteField('note', PAY_JACKPOT_NOTE_PRESETS)}
+      <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Pay</button></div>`, m => {
       wireNotes(m, 'note');
       m.querySelector('[data-x]').onclick = closeModal;
       m.querySelector('[data-ok]').onclick = () => {
@@ -1582,8 +1590,8 @@
       ${act('🔁', 'Transfer', 'xfer')}
       ${act('🏦', 'Loan', 'loan')}
       ${act('🧾', 'Add Bill', 'bill')}
-      ${act('📋', 'Bills', 'bills')}
-      ${act('🎰', 'Jackpot', 'jackpot')}
+      ${act('📋', 'View Bills', 'bills')}
+      ${act('🎰', 'Pay Jackpot/Charity', 'jackpot')}
       ${act('✏️', 'Edit', 'edit')}
       ${act('📅', 'PAYDAY', 'payday', 'btn-payday')}
     </div>`;
