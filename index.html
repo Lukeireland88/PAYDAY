@@ -370,8 +370,9 @@
       display: flex; flex-direction: row; gap: 0.75rem; align-items: flex-start;
     }
     .modal-body { flex: 1; min-width: 0; max-width: 480px; }
+    .modal-keypad-wrap { flex: 0 0 11.5rem; display: flex; flex-direction: column; gap: 0.35rem; }
     .modal-keypad {
-      flex: 0 0 11.5rem; display: grid; grid-template-columns: repeat(3, 1fr);
+      display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 0.35rem; padding: 0.25rem;
     }
     .keypad-btn {
@@ -382,6 +383,9 @@
     }
     .keypad-btn:active { transform: scale(0.96); background: var(--border); }
     .keypad-clear { font-size: 1rem; }
+    .keypad-zeros { font-size: 1.05rem; letter-spacing: 0.02em; }
+    .keypad-back { grid-column: 1; }
+    .keypad-clear { grid-column: 3; font-size: 1rem; }
     .amount-entry {
       font-variant-numeric: tabular-nums; font-size: 1.25rem; font-weight: 700;
       min-height: 48px; width: 100%; padding: 0.65rem;
@@ -392,9 +396,12 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(26,107,60,0.18);
     }
+    .amount-entry-hint {
+      font-size: 0.75rem; color: var(--text-muted); margin: 0.35rem 0 0; line-height: 1.35;
+    }
     @media (max-width: 639px) {
       .modal-layout { flex-direction: column; }
-      .modal-keypad { flex: none; width: 100%; }
+      .modal-keypad-wrap { flex: none; width: 100%; }
     }
     .modal h3 { margin-bottom: 0.75rem; color: var(--accent); }
     .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
@@ -1028,17 +1035,45 @@
   }
 
   function createAmountKeypad() {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-keypad-wrap';
     const pad = document.createElement('div');
     pad.className = 'modal-keypad';
     pad.setAttribute('role', 'group');
     pad.setAttribute('aria-label', 'Amount keypad');
-    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'back', '0', 'clear'];
-    pad.innerHTML = keys.map(k => {
-      const label = k === 'back' ? '⌫' : k === 'clear' ? 'C' : k;
-      const cls = k === 'back' ? 'keypad-btn keypad-back' : k === 'clear' ? 'keypad-btn keypad-clear' : 'keypad-btn';
-      return `<button type="button" class="${cls}" data-key="${k}">${label}</button>`;
-    }).join('');
-    return pad;
+    const btn = (key, label, cls = 'keypad-btn') =>
+      `<button type="button" class="${cls}" data-key="${key}">${label}</button>`;
+    pad.innerHTML =
+      btn('1', '1') + btn('2', '2') + btn('3', '3') +
+      btn('4', '4') + btn('5', '5') + btn('6', '6') +
+      btn('7', '7') + btn('8', '8') + btn('9', '9') +
+      btn('00', '00', 'keypad-btn keypad-zeros') +
+      btn('0', '0') +
+      btn('000', '000', 'keypad-btn keypad-zeros') +
+      btn('back', '⌫', 'keypad-btn keypad-back') +
+      btn('clear', 'C', 'keypad-btn keypad-clear');
+    wrap.appendChild(pad);
+    const hint = document.createElement('p');
+    hint.className = 'amount-entry-hint';
+    hint.textContent = 'Type the dollars, then tap 00 or 000 (e.g. 35 + 00 = 3500)';
+    wrap.appendChild(hint);
+    return wrap;
+  }
+
+  function appendAmountKey(activeInput, key) {
+    let v = activeInput.value || '';
+    if (key === 'back') {
+      activeInput.value = v.slice(0, -1);
+    } else if (key === 'clear') {
+      activeInput.value = '';
+    } else if (key === '00' || key === '000') {
+      if (!v || v === '0') return;
+      activeInput.value = v + key;
+    } else {
+      if (v === '0') v = '';
+      activeInput.value = v + key;
+    }
+    activeInput.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   function wireAmountKeypad(modal, inputs) {
@@ -1058,21 +1093,8 @@
 
     const keypad = modal.querySelector('.modal-keypad');
     if (!keypad) return;
-
     keypad.querySelectorAll('[data-key]').forEach(btn => {
-      btn.onclick = () => {
-        const key = btn.dataset.key;
-        let v = activeInput.value || '';
-        if (key === 'back') {
-          activeInput.value = v.slice(0, -1);
-        } else if (key === 'clear') {
-          activeInput.value = '';
-        } else {
-          if (v === '0') v = '';
-          activeInput.value = v + key;
-        }
-        activeInput.dispatchEvent(new Event('input', { bubbles: true }));
-      };
+      btn.onclick = () => appendAmountKey(activeInput, btn.dataset.key);
     });
   }
 
