@@ -997,10 +997,11 @@
     syncModalScrollLock();
     if (onMount) onMount(m);
     setupModalAmountKeypad(m);
-    const inp = m.querySelector('input:not([type="checkbox"]):not(.amount-entry),select,textarea');
+    const amountInp = findAmountInputs(m)[0];
+    const inp = amountInp || m.querySelector('input:not([type="checkbox"]):not(.amount-entry),select,textarea');
     if (inp) {
       inp.focus({ preventScroll: true });
-      if (window.matchMedia('(pointer: coarse)').matches) {
+      if (!amountInp && window.matchMedia('(pointer: coarse)').matches) {
         setTimeout(() => inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 250);
       }
     }
