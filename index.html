@@ -308,6 +308,7 @@
 
     /* History */
     .history-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .history-filter-players { flex: 1 1 100%; margin-bottom: 0.25rem; }
     .history-filters input, .history-filters select {
       flex: 1; min-width: 120px; padding: 0.65rem; font-size: 1rem;
       border: 2px solid var(--border); border-radius: var(--radius);
@@ -536,7 +537,7 @@
           <h2>Transaction History</h2>
           <div class="history-filters">
             <input type="search" id="history-search" placeholder="Search notes...">
-            <select id="history-filter-player"><option value="">All Players</option></select>
+            <div class="note-chips history-filter-players" id="history-filter-player"></div>
             <select id="history-filter-type"><option value="">All Types</option></select>
           </div>
           <div class="toolbar">
@@ -1117,14 +1118,6 @@
 
   function modalErr(m, msg) { const e = m.querySelector('.error-msg'); if (e) e.textContent = msg; }
 
-  function playerOptions(exclude) {
-    return state.players.filter(p => p.id !== exclude).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  }
-
-  function allPlayerOptions() {
-    return state.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
-  }
-
   function openAmountModal(title, fields, onConfirm, { noteAmounts } = {}) {
     openModal(`<h3>${title}</h3>${fields}<p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Confirm</button></div>`, m => {
       m.querySelector('[data-x]').onclick = closeModal;
@@ -1175,15 +1168,16 @@
     </button>`;
   }
 
-  function inlinePlayerPickerHtml({ label, subtitle, selectedId } = {}) {
+  function inlinePlayerPickerHtml({ label, subtitle, selectedId, excludeId } = {}) {
     const leaders = getLeaders();
     const leaderTie = leaders.length > 1;
     const leaderIds = new Set(leaders.map(p => p.id));
+    const players = excludeId ? state.players.filter(p => p.id !== excludeId) : state.players;
     return `<div class="form-group player-picker-group">
       ${label ? `<label>${esc(label)}</label>` : ''}
       ${subtitle ? `<p class="player-picker-subtitle">${subtitle}</p>` : ''}
       <div class="player-picker" data-player-picker>
-        ${state.players.map(p => playerPickerButtonHtml(p, leaderIds, leaderTie, p.id === selectedId)).join('')}
+        ${players.map(p => playerPickerButtonHtml(p, leaderIds, leaderTie, p.id === selectedId)).join('')}
       </div>
     </div>`;
   }
@@ -1237,10 +1231,11 @@
   function actionTransfer(playerId) {
     const p = getPlayer(playerId);
     openModal(`<h3>Transfer — ${esc(p.name)}</h3><p>Cash: ${money(p.cash)}</p>
-      <div class="form-group"><label>To</label><select id="to">${playerOptions(playerId)}</select></div>
+      ${inlinePlayerPickerHtml({ label: 'To', subtitle: 'Who receives the transfer?', excludeId: playerId })}
       ${amountNoteFields(TRANSFER_NOTE_PRESETS, 'min="1"')}
       <div class="checkbox-row" id="loan-row" hidden><input type="checkbox" id="useloan"><label for="useloan">Take loan for shortfall</label></div>
       <p class="error-msg"></p><div class="modal-actions"><button type="button" class="btn" data-x>Cancel</button><button type="button" class="btn btn-primary" data-ok>Transfer</button></div>`, m => {
+      const getToId = wirePlayerPicker(m);
       const amtIn = m.querySelector('#amt');
       const loanRow = m.querySelector('#loan-row');
       amtIn.oninput = () => {
@@ -1259,10 +1254,11 @@
       wireNotes(m, 'note', { amountId: 'amt', amountByNote: TRANSFER_NOTE_AMOUNTS });
       m.querySelector('[data-ok]').onclick = () => {
         const a = parseAmt(amtIn.value);
-        const to = m.querySelector('#to').value;
+        const to = getToId();
         const note = m.querySelector('#note').value.trim();
         const sh = a ? a - p.cash : 0;
         const useLoan = sh > 0 && m.querySelector('#useloan').checked;
+        if (!to) { modalErr(m, 'Select a player to transfer to'); return; }
         if (!a) { modalErr(m, 'Enter valid amount'); return; }
         if (sh > 0 && !useLoan) { modalErr(m, `Insufficient cash. Shortfall: ${money(sh)}`); return; }
         openConfirmModal({
@@ -1836,9 +1832,30 @@
     grid.innerHTML = state.players.map(p => renderReadOnlyPlayerCard(p, leaderIds, leaderTie)).join('');
   }
 
+  function historyPlayerFilterId() {
+    return $('#history-filter-player')?.querySelector('.note-chip.active')?.dataset.pid || '';
+  }
+
+  function ensureHistoryPlayerFilter() {
+    const fp = $('#history-filter-player');
+    if (!fp || !state.gameStarted) return;
+    if (fp.dataset.count === String(state.players.length)) return;
+    fp.dataset.count = String(state.players.length);
+    const active = historyPlayerFilterId();
+    fp.innerHTML = `<button type="button" class="note-chip${active === '' ? ' active' : ''}" data-pid="">All Players</button>` +
+      state.players.map(p => `<button type="button" class="note-chip${active === p.id ? ' active' : ''}" data-pid="${p.id}">${esc(p.name)}</button>`).join('');
+    fp.querySelectorAll('.note-chip').forEach(btn => {
+      btn.onclick = () => {
+        fp.querySelectorAll('.note-chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderHistory();
+      };
+    });
+  }
+
   function filteredHistory() {
     const q = ($('#history-search')?.value || '').toLowerCase();
-    const fp = $('#history-filter-player')?.value || '';
+    const fp = historyPlayerFilterId();
     const ft = $('#history-filter-type')?.value || '';
     return state.transactions.filter(t => {
       if (fp && t.from !== fp && t.to !== fp) return false;
@@ -1858,11 +1875,8 @@
         <div>${esc(playerName(t.from))} → ${esc(playerName(t.to))}</div>
         ${t.note?`<div style="font-size:0.8rem;color:var(--text-muted);font-style:italic">${esc(t.note)}</div>`:''}</div>
       <div class="history-amt">${t.amount?money(t.amount):'—'}</div></div>`).join('');
-    const fp = $('#history-filter-player');
+    ensureHistoryPlayerFilter();
     const ft = $('#history-filter-type');
-    if (fp && fp.options.length <= 1) {
-      fp.innerHTML = '<option value="">All Players</option>' + state.players.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
-    }
     if (ft && ft.options.length <= 1) {
       ft.innerHTML = '<option value="">All Types</option>' + Object.entries(TXN_LABELS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
     }
@@ -1877,13 +1891,39 @@
     $('#banker-quick').onclick = e => {
       const b = e.target.closest('[data-bk]');
       if (!b) return;
-      if (b.dataset.bk === 'recv') openModal(`<h3>Bank Pay Player</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
-        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
-        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; if(!a){modalErr(m,'Amount required');return;} doTxn('bank_payment',a,'bank',pid,m.querySelector('#note').value.trim(),()=>{mutateBankPayment(pid,a);return{ok:true};}); closeModal(); };
+      if (b.dataset.bk === 'recv') openModal(`<h3>Bank Pay Player</h3>
+        ${inlinePlayerPickerHtml({ label: 'Player', subtitle: 'Who receives the payment?' })}
+        ${amountNoteFields(NOTE_PRESETS, 'min="1"')}
+        <p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+        const getPlayerId = wirePlayerPicker(m);
+        wireNotes(m, 'note');
+        m.querySelector('[data-x]').onclick = closeModal;
+        m.querySelector('[data-ok]').onclick = () => {
+          const pid = getPlayerId();
+          const a = parseAmt(m.querySelector('#amt').value);
+          if (!pid) { modalErr(m, 'Select a player'); return; }
+          if (!a) { modalErr(m, 'Amount required'); return; }
+          doTxn('bank_payment', a, 'bank', pid, m.querySelector('#note').value.trim(), () => { mutateBankPayment(pid, a); return { ok: true }; });
+          closeModal();
+        };
       });
-      if (b.dataset.bk === 'dep') openModal(`<h3>Player Pay Bank</h3><div class="form-group"><label>Player</label><select id="pl">${allPlayerOptions()}</select></div>${amountNoteFields(NOTE_PRESETS, 'min="1"')}<p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
-        wireNotes(m,'note'); m.querySelector('[data-x]').onclick=closeModal;
-        m.querySelector('[data-ok]').onclick=()=>{ const a=parseAmt(m.querySelector('#amt').value); const pid=m.querySelector('#pl').value; const p=getPlayer(pid); if(!a){modalErr(m,'Amount required');return;} if(p.cash<a){modalErr(m,'Insufficient cash');return;} doTxn('bank_deposit',a,pid,'bank',m.querySelector('#note').value.trim(),()=>{mutateBankDeposit(pid,a);return{ok:true};}); closeModal(); };
+      if (b.dataset.bk === 'dep') openModal(`<h3>Player Pay Bank</h3>
+        ${inlinePlayerPickerHtml({ label: 'Player', subtitle: 'Who is paying the bank?' })}
+        ${amountNoteFields(NOTE_PRESETS, 'min="1"')}
+        <p class="error-msg"></p><div class="modal-actions"><button class="btn" data-x>Cancel</button><button class="btn btn-primary" data-ok>Pay</button></div>`, m => {
+        const getPlayerId = wirePlayerPicker(m);
+        wireNotes(m, 'note');
+        m.querySelector('[data-x]').onclick = closeModal;
+        m.querySelector('[data-ok]').onclick = () => {
+          const pid = getPlayerId();
+          const a = parseAmt(m.querySelector('#amt').value);
+          const p = getPlayer(pid);
+          if (!pid) { modalErr(m, 'Select a player'); return; }
+          if (!a) { modalErr(m, 'Amount required'); return; }
+          if (p.cash < a) { modalErr(m, 'Insufficient cash'); return; }
+          doTxn('bank_deposit', a, pid, 'bank', m.querySelector('#note').value.trim(), () => { mutateBankDeposit(pid, a); return { ok: true }; });
+          closeModal();
+        };
       });
       if (b.dataset.bk === 'jackpot-six') actionJackpotRollSix();
       if (b.dataset.bk === 'lottery') actionLottery();
@@ -2125,7 +2165,6 @@
     $('#btn-winner').onclick = showWinner;
     $$('.nav-btn').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
     $('#history-search').oninput = renderHistory;
-    $('#history-filter-player').onchange = renderHistory;
     $('#history-filter-type').onchange = renderHistory;
 
     $('#btn-toggle-summary').onclick = () => {
