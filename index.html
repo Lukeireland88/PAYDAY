@@ -205,10 +205,43 @@
     .lottery-player-row.short { color: var(--danger); }
     .lottery-prize { font-size: 1.5rem; font-weight: 800; color: var(--jackpot); text-align: center; margin: 0.75rem 0; }
 
-    /* Player cards */
+    /* Player board */
+    .player-board-header {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 0.5rem; margin-bottom: 0.75rem;
+    }
+    .player-board-hint { font-size: 0.85rem; color: var(--text-muted); flex: 1; min-width: 12rem; }
     .player-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
     @media (min-width: 600px) { .player-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 960px) { .player-grid { grid-template-columns: repeat(3, 1fr); } }
+    .player-board-focus { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+    .player-roster {
+      display: flex; gap: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.25rem; scroll-snap-type: x proximity;
+    }
+    .roster-chip {
+      flex: 0 0 auto; min-width: 8.5rem; max-width: 11rem;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem;
+      padding: 0.65rem 0.75rem; border: 2px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); cursor: pointer; touch-action: manipulation;
+      text-align: left; font-family: inherit; color: var(--text); min-height: 48px;
+      scroll-snap-align: start; box-shadow: var(--shadow);
+    }
+    .roster-chip.is-selected {
+      border-color: var(--primary); border-width: 3px;
+      box-shadow: 0 0 0 2px rgba(26,107,60,0.18);
+    }
+    .roster-chip.is-leader { background: var(--card-leader); }
+    .roster-chip.negative { background: var(--card-danger); }
+    .roster-chip.has-bills { border-left: 4px solid var(--warning); }
+    .roster-name { font-size: 0.95rem; font-weight: 800; line-height: 1.2; }
+    .roster-cash { font-size: 1.05rem; font-weight: 700; color: var(--success); }
+    .roster-meta { font-size: 0.7rem; color: var(--text-muted); line-height: 1.3; }
+    .player-focus-card { margin-bottom: 0; }
+    .player-focus-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.35rem;
+    }
 
     .player-card {
       background: var(--surface); border: 3px solid var(--border); border-radius: var(--radius);
@@ -437,6 +470,10 @@
             <button type="button" class="btn btn-sm" data-action="jackpot-edit">Edit Jackpot</button>
           </div>
         </div>
+        <div class="player-board-header">
+          <p class="player-board-hint" id="player-board-hint">Select a player, then choose an action.</p>
+          <button type="button" id="btn-layout-mode" class="btn btn-sm" title="Switch player board layout">📋 Classic layout</button>
+        </div>
         <div class="player-grid" id="player-grid"></div>
       </div>
 
@@ -535,6 +572,8 @@
       theme: 'light',
       headerCollapsed: true,
       keepAwake: true,
+      playerLayout: 'focus',
+      selectedPlayerId: null,
       peakBalances: {}
     };
   }
@@ -1394,40 +1433,131 @@
     $('#btn-undo').disabled = !state.transactions.length;
   }
 
+  function isClassicLayout() {
+    return state.playerLayout === 'classic';
+  }
+
+  function ensureSelectedPlayer() {
+    if (!state.players.length) {
+      state.selectedPlayerId = null;
+      return;
+    }
+    if (!state.selectedPlayerId || !getPlayer(state.selectedPlayerId)) {
+      state.selectedPlayerId = state.players[0].id;
+    }
+  }
+
+  function playerStatusClasses(p, leaderIds, leaderTie) {
+    const bt = billsTotal(p);
+    const isLeader = leaderIds.has(p.id);
+    let cls = '';
+    if (isLeader && !leaderTie) cls += ' is-leader';
+    if (isLeader && leaderTie) cls += ' is-tied';
+    if (p.cash < 0) cls += ' negative';
+    if (bt > 0) cls += ' has-bills';
+    if (p.loan > 0) cls += ' has-loan';
+    return cls;
+  }
+
+  function playerLeaderBadge(p, leaderIds, leaderTie) {
+    if (!leaderIds.has(p.id)) return '';
+    return leaderTie ? '<span class="tied-badge">TIED</span>' : '<span class="leader-badge">LEADER</span>';
+  }
+
+  function playerBalancesHtml(p) {
+    const nw = netWorth(p);
+    const bt = billsTotal(p);
+    return `<div class="balance-row cash"><span>Cash</span><span class="amt">${money(p.cash)}</span></div>
+      <div class="balance-row loan"><span>Loan</span><span class="amt">${money(p.loan)}</span></div>
+      <div class="balance-row bills"><span>Bills Due</span><span class="amt">${money(bt)}</span></div>
+      <div class="player-meta">Net: ${money(nw)} · Salary: ${money(p.salary)} · Paydays: ${p.paydayCount} · Interest: 10%</div>`;
+  }
+
+  function playerActionsHtml(playerId) {
+    return `<div class="player-actions">
+      <button type="button" class="btn" data-a="recv" data-p="${playerId}">Receive</button>
+      <button type="button" class="btn" data-a="pay" data-p="${playerId}">Pay</button>
+      <button type="button" class="btn" data-a="xfer" data-p="${playerId}">Transfer</button>
+      <button type="button" class="btn" data-a="loan" data-p="${playerId}">Loan</button>
+      <button type="button" class="btn" data-a="bill" data-p="${playerId}">Add Bill</button>
+      <button type="button" class="btn" data-a="bills" data-p="${playerId}">View Bills</button>
+      <button type="button" class="btn" data-a="jackpot" data-p="${playerId}">Jackpot</button>
+      <button type="button" class="btn" data-a="edit" data-p="${playerId}">Edit</button>
+      <button type="button" class="btn btn-payday" data-a="payday" data-p="${playerId}">PAYDAY</button>
+    </div>`;
+  }
+
+  function renderClassicPlayerCard(p, leaderIds, leaderTie) {
+    const cls = 'player-card' + playerStatusClasses(p, leaderIds, leaderTie);
+    return `<div class="${cls}">${playerLeaderBadge(p, leaderIds, leaderTie)}
+      <div class="player-name">${esc(p.name)}</div>
+      ${playerBalancesHtml(p)}
+      ${playerActionsHtml(p.id)}
+    </div>`;
+  }
+
+  function renderRosterChip(p, selectedId, leaderIds, leaderTie) {
+    const bt = billsTotal(p);
+    const loan = p.loan;
+    const meta = [
+      loan > 0 ? `Loan ${money(loan)}` : '',
+      bt > 0 ? `Bills ${money(bt)}` : ''
+    ].filter(Boolean).join(' · ');
+    let cls = 'roster-chip' + playerStatusClasses(p, leaderIds, leaderTie);
+    if (p.id === selectedId) cls += ' is-selected';
+    return `<button type="button" class="${cls}" data-select-player="${p.id}">
+      <span class="roster-name">${esc(p.name)}</span>
+      <span class="roster-cash">${money(p.cash)}</span>
+      ${meta ? `<span class="roster-meta">${esc(meta)}</span>` : ''}
+    </button>`;
+  }
+
+  function renderFocusPlayerCard(p, leaderIds, leaderTie) {
+    const cls = 'player-card player-focus-card' + playerStatusClasses(p, leaderIds, leaderTie);
+    return `<div class="${cls}">${playerLeaderBadge(p, leaderIds, leaderTie)}
+      <div class="player-focus-label">Banking for</div>
+      <div class="player-name">${esc(p.name)}</div>
+      ${playerBalancesHtml(p)}
+      ${playerActionsHtml(p.id)}
+    </div>`;
+  }
+
+  function renderPlayerBoardHint() {
+    const hint = $('#player-board-hint');
+    const btn = $('#btn-layout-mode');
+    if (!hint || !btn) return;
+    if (isClassicLayout()) {
+      hint.textContent = 'All players shown with actions on each card.';
+      btn.textContent = '🎯 Focus mode';
+      btn.title = 'Select a player, then show actions';
+    } else {
+      const selected = getPlayer(state.selectedPlayerId);
+      hint.textContent = selected
+        ? `Banking for ${selected.name}. Tap another player to switch.`
+        : 'Select a player, then choose an action.';
+      btn.textContent = '📋 Classic layout';
+      btn.title = 'Show all players with actions on each card';
+    }
+  }
+
   function renderPlayers() {
+    ensureSelectedPlayer();
     const leaders = getLeaders();
     const leaderTie = leaders.length > 1;
     const leaderIds = new Set(leaders.map(p => p.id));
     const grid = $('#player-grid');
-    grid.innerHTML = state.players.map(p => {
-      const nw = netWorth(p);
-      const bt = billsTotal(p);
-      const isLeader = leaderIds.has(p.id);
-      let cls = 'player-card';
-      if (isLeader && !leaderTie) cls += ' is-leader';
-      if (isLeader && leaderTie) cls += ' is-tied';
-      if (p.cash < 0) cls += ' negative';
-      if (bt > 0) cls += ' has-bills';
-      if (p.loan > 0) cls += ' has-loan';
-      const badge = isLeader ? (leaderTie ? '<span class="tied-badge">TIED</span>' : '<span class="leader-badge">LEADER</span>') : '';
-      return `<div class="${cls}">${badge}
-        <div class="player-name">${esc(p.name)}</div>
-        <div class="balance-row cash"><span>Cash</span><span class="amt">${money(p.cash)}</span></div>
-        <div class="balance-row loan"><span>Loan</span><span class="amt">${money(p.loan)}</span></div>
-        <div class="balance-row bills"><span>Bills Due</span><span class="amt">${money(bt)}</span></div>
-        <div class="player-meta">Net: ${money(nw)} · Salary: ${money(p.salary)} · Paydays: ${p.paydayCount} · Interest: 10%</div>
-        <div class="player-actions">
-          <button type="button" class="btn" data-a="recv" data-p="${p.id}">Receive</button>
-          <button type="button" class="btn" data-a="pay" data-p="${p.id}">Pay</button>
-          <button type="button" class="btn" data-a="xfer" data-p="${p.id}">Transfer</button>
-          <button type="button" class="btn" data-a="loan" data-p="${p.id}">Loan</button>
-          <button type="button" class="btn" data-a="bill" data-p="${p.id}">Add Bill</button>
-          <button type="button" class="btn" data-a="bills" data-p="${p.id}">View Bills</button>
-          <button type="button" class="btn" data-a="jackpot" data-p="${p.id}">Jackpot</button>
-          <button type="button" class="btn" data-a="edit" data-p="${p.id}">Edit</button>
-          <button type="button" class="btn btn-payday" data-a="payday" data-p="${p.id}">PAYDAY</button>
-        </div></div>`;
-    }).join('');
+    renderPlayerBoardHint();
+    if (isClassicLayout()) {
+      grid.className = 'player-grid';
+      grid.innerHTML = state.players.map(p => renderClassicPlayerCard(p, leaderIds, leaderTie)).join('');
+      return;
+    }
+    const selected = getPlayer(state.selectedPlayerId);
+    grid.className = 'player-board-focus';
+    grid.innerHTML = `<div class="player-roster" role="tablist" aria-label="Players">
+      ${state.players.map(p => renderRosterChip(p, state.selectedPlayerId, leaderIds, leaderTie)).join('')}
+    </div>
+    ${selected ? renderFocusPlayerCard(selected, leaderIds, leaderTie) : ''}`;
   }
 
   function filteredHistory() {
@@ -1632,6 +1762,7 @@
     state.transactions = [];
     state.peakBalances = {};
     state.players = names.map((n, i) => defaultPlayer(n, salaries[i] || 3500, start));
+    state.selectedPlayerId = state.players[0]?.id || null;
     state.gameStarted = true;
     $('#setup-error').textContent = '';
     save(); render();
@@ -1715,7 +1846,19 @@
     $('#history-filter-player').onchange = renderHistory;
     $('#history-filter-type').onchange = renderHistory;
 
+    $('#btn-layout-mode').onclick = () => {
+      state.playerLayout = isClassicLayout() ? 'focus' : 'classic';
+      save();
+      renderPlayers();
+    };
     $('#player-grid').onclick = e => {
+      const selectBtn = e.target.closest('[data-select-player]');
+      if (selectBtn) {
+        state.selectedPlayerId = selectBtn.dataset.selectPlayer;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { console.warn(e); }
+        renderPlayers();
+        return;
+      }
       const b = e.target.closest('[data-a]');
       if (!b) return;
       const a = b.dataset.a, p = b.dataset.p;
