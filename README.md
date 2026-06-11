@@ -26,6 +26,8 @@ To resume later, open the same file in the same browser — your game is stored 
 ### Per-player actions
 | Action | Purpose |
 |--------|---------|
+| **Deal** | Shortcut: player pays the bank to buy a deal (note pre-filled) |
+| **Found a Buyer!** | Shortcut: bank pays the player when a deal is sold (note pre-filled) |
 | **Receive** | Bank pays the player (salary, mail, deals, etc.) |
 | **Pay Bank** | Player pays the bank |
 | **Transfer** | Player-to-player payment |

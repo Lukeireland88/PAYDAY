@@ -610,8 +610,8 @@
   };
   const TRANSFER_NOTE_PRESETS = ['Birthday', 'Mad Money', 'Pay a Neighbour'];
   const TRANSFER_NOTE_AMOUNTS = { 'Birthday': 100 };
-  const PAY_NOTE_PRESETS = ['Deal', 'Monster Charge', 'Other'];
-  const RECEIVE_NOTE_PRESETS = ['Date Night at the Casino', 'Found a Buyer!', 'Pools', 'Radio Contest', 'Scratchcard'];
+  const PAY_NOTE_PRESETS = ['Monster Charge', 'Other'];
+  const RECEIVE_NOTE_PRESETS = ['Date Night at the Casino', 'Pools', 'Radio Contest', 'Scratchcard'];
   const RECEIVE_NOTE_AMOUNTS = {
     'Date Night at the Casino': 500,
     'Pools': 5000,
@@ -1123,6 +1123,10 @@
       <div class="form-group"><input id="note" maxlength="120" placeholder="Optional note"></div>`;
   }
 
+  function amountOnlyFields(amountAttrs = 'min="1" step="1"') {
+    return `<div class="form-group"><label for="amt">Amount</label>${amountInputHtml('amt', amountAttrs)}</div>`;
+  }
+
   function wireNotes(m, id, { amountId, amountByNote } = {}) {
     const inp = m.querySelector('#' + id);
     if (!inp) return;
@@ -1149,6 +1153,8 @@
   }
 
   const ACTION_LABELS = {
+    deal: 'Deal',
+    buyer: 'Found a Buyer!',
     recv: 'Receive',
     pay: 'Pay Bank',
     xfer: 'Transfer from',
@@ -1160,9 +1166,15 @@
     payday: 'PAYDAY'
   };
 
-  const ACTION_SUBTITLES = { xfer: 'Who is transferring from?' };
+  const ACTION_SUBTITLES = {
+    deal: 'Who is buying the deal?',
+    buyer: 'Who sold the deal?',
+    xfer: 'Who is transferring from?'
+  };
 
   const ACTION_HANDLERS = {
+    deal: actionDeal,
+    buyer: actionFoundBuyer,
     recv: actionReceive,
     pay: actionPay,
     xfer: actionTransfer,
@@ -1247,6 +1259,25 @@
       if (!a) return { err: 'Enter valid amount' };
       if (p.cash < a) return { err: 'Insufficient cash' };
       return doTxn('bank_deposit', a, playerId, 'bank', m.querySelector('#note').value.trim(), () => { mutateBankDeposit(playerId, a); return { ok: true }; });
+    });
+  }
+
+  function actionDeal(playerId) {
+    const p = getPlayer(playerId);
+    openAmountModal(`Deal — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p>${amountOnlyFields('min="1"')}`, m => {
+      const a = parseAmt(m.querySelector('#amt').value);
+      if (!a) return { err: 'Enter valid amount' };
+      if (p.cash < a) return { err: 'Insufficient cash' };
+      return doTxn('bank_deposit', a, playerId, 'bank', 'Deal', () => { mutateBankDeposit(playerId, a); return { ok: true }; });
+    });
+  }
+
+  function actionFoundBuyer(playerId) {
+    const p = getPlayer(playerId);
+    openAmountModal(`Found a Buyer! — ${esc(p.name)}`, `<p>Cash: ${money(p.cash)}</p>${amountOnlyFields()}`, m => {
+      const a = parseAmt(m.querySelector('#amt').value);
+      if (!a) return { err: 'Enter valid amount' };
+      return doTxn('bank_payment', a, 'bank', playerId, 'Found a Buyer!', () => { mutateBankPayment(playerId, a); return { ok: true }; });
     });
   }
 
@@ -1810,7 +1841,9 @@
   function globalActionsHtml() {
     const act = (icon, text, action, extra = '') =>
       iconBtn(icon, text, `btn btn-labeled ${extra}`.trim(), `data-a="${action}"`);
-    return `${act('💵', 'Receive', 'recv')}
+    return `${act('🤝', 'Deal', 'deal')}
+      ${act('🏷️', 'Found a Buyer!', 'buyer')}
+      ${act('💵', 'Receive', 'recv')}
       ${act('💳', 'Pay Bank', 'pay')}
       ${act('🔁', 'Transfer', 'xfer')}
       ${act('🎰', 'Pay Jackpot', 'jackpot')}
